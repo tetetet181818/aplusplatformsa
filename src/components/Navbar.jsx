@@ -10,12 +10,11 @@ import MobileMenu from "@/components/navbar/MobileMenu";
 import LoginDialog from "@/components/auth/LoginDialog";
 import RegisterDialog from "@/components/auth/RegisterDialog";
 
-export default function Navbar({
-  isRegisterDialogOpen,
-  setIsRegisterDialogOpen,
-}) {
+export default function Navbar({}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
+  const [isRegisterDialogOpen, setIsRegisterDialogOpen] = useState(false);
+
   const { user, logout, isAuthenticated, loading } = useAuthStore(
     (state) => state
   );
