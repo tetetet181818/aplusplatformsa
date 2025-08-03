@@ -22,7 +22,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useNotificationsStore } from "@/stores/useNotificationsStore";
 import { useAuthStore } from "../../stores/useAuthStore";
 import formatArabicDate from "@/config/formateTime";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 export function NotificationBell({ className }) {
   const { isOpen, setIsOpen, loading, fetchNotifications } =
     useNotificationsStore();

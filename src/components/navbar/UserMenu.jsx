@@ -47,7 +47,7 @@ export default function UserMenu({ handleLogout, user }) {
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link
-              to="/profile"
+              href="/profile"
               className="cursor-pointer w-full flex items-center py-2 text-sm space-x-2"
             >
               <Settings className="ml-2 h-4 w-4 text-muted-foreground" />
@@ -57,7 +57,7 @@ export default function UserMenu({ handleLogout, user }) {
           {user?.role === "admin" && (
             <DropdownMenuItem asChild>
               <Link
-                to="/dashboard"
+                href="/dashboard"
                 className="cursor-pointer w-full flex items-center py-2 text-sm space-x-2"
               >
                 <LayoutDashboard className="ml-2 h-4 w-4 text-muted-foreground" />
@@ -67,7 +67,7 @@ export default function UserMenu({ handleLogout, user }) {
           )}
           <DropdownMenuItem asChild>
             <Link
-              to="/profile?tab=purchased"
+              href="/profile?tab=purchased"
               className="cursor-pointer w-full flex items-center py-2 text-sm space-x-2"
             >
               <ShoppingBag className="ml-2 h-4 w-4 text-muted-foreground" />
@@ -76,7 +76,7 @@ export default function UserMenu({ handleLogout, user }) {
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link
-              to="/add-note"
+              href="/add-note"
               className="cursor-pointer w-full flex items-center py-2 text-sm space-x-2"
             >
               <PlusCircle className="ml-2 h-4 w-4 text-muted-foreground" />

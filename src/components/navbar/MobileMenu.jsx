@@ -66,7 +66,7 @@ const MobileMenu = ({
         </form>
 
         <div className="flex flex-col space-y-2">
-          <Link href="/notes" passHref legacyBehavior>
+          <Link href="/notes">
             <Button
               variant="ghost"
               className="w-full justify-start text-base py-3"
@@ -82,7 +82,7 @@ const MobileMenu = ({
 
           {isAuthenticated ? (
             <>
-              <Link href="/add-note" passHref legacyBehavior>
+              <Link href="/add-note">
                 <Button
                   variant="ghost"
                   className="w-full justify-start text-base py-3"
@@ -97,7 +97,7 @@ const MobileMenu = ({
               </Link>
 
               {user?.role === "admin" && (
-                <Link href="/dashboard" passHref legacyBehavior>
+                <Link href="/dashboard">
                   <Button
                     variant="ghost"
                     className="w-full justify-start text-base py-3"
@@ -112,7 +112,7 @@ const MobileMenu = ({
                 </Link>
               )}
 
-              <Link href="/profile" passHref legacyBehavior>
+              <Link href="/profile">
                 <Button
                   variant="ghost"
                   className="w-full justify-start text-base py-3"
@@ -126,7 +126,7 @@ const MobileMenu = ({
                 </Button>
               </Link>
 
-              <Link href="/profile?tab=purchased" passHref legacyBehavior>
+              <Link href="/profile?tab=purchased">
                 <Button
                   variant="ghost"
                   className="w-full justify-start text-base py-3"

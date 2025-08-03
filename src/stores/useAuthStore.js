@@ -23,7 +23,7 @@ export const useAuthStore = create((set, get) => ({
   notificationsLoading: false,
   unread: [],
   handleError: (error, customMessage = null) => {
-    console.error(error);
+    console.log(error);
     const message = customMessage || error.message || "حدث خطأ غير متوقع";
     toast({
       title: "خطأ",
@@ -162,7 +162,7 @@ export const useAuthStore = create((set, get) => ({
         try {
           await supabase.auth.admin.deleteUser(authData.user.id);
         } catch (deleteError) {
-          console.error("Failed to cleanup user:", deleteError);
+          console.log("Failed to cleanup user:", deleteError);
         }
         throw profileError;
       }
@@ -360,19 +360,44 @@ export const useAuthStore = create((set, get) => ({
       return get().handleError(error, "فشل في جلب بيانات المستخدم");
     }
   },
-
-  getAllUsers: async (page = 1, itemsPerPage = 10) => {
+  getAllUsers: async ({
+    page = 1,
+    itemsPerPage = 10,
+    date = null,
+    university = null,
+  }) => {
     try {
       set({ loading: true });
 
       const from = (page - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
 
-      const { data, count, error } = await supabase
+      // Create base query
+      let query = supabase
         .from("users")
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false })
         .range(from, to);
+
+      // Add date filter if provided
+      if (date) {
+        const startDate = new Date(date);
+        startDate.setHours(0, 0, 0, 0);
+
+        const endDate = new Date(date);
+        endDate.setHours(23, 59, 59, 999);
+
+        query = query
+          .gte("created_at", startDate.toISOString())
+          .lte("created_at", endDate.toISOString());
+      }
+
+      // Add university filter if provided
+      if (university) {
+        query = query.eq("university", university);
+      }
+
+      const { data, count, error } = await query;
 
       if (error) throw error;
 
@@ -391,6 +416,26 @@ export const useAuthStore = create((set, get) => ({
       };
     } catch (error) {
       return get().handleError(error, "فشل في جلب قائمة المستخدمين");
+    }
+  },
+
+  getUniversities: async () => {
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .select("university")
+        .not("university", "is", null)
+        .order("university", { ascending: true });
+
+      if (error) throw error;
+
+      // Extract unique universities
+      const uniqueUniversities = [
+        ...new Set(data.map((item) => item.university)),
+      ];
+      return uniqueUniversities;
+    } catch (error) {
+      return get().handleError(error, "فشل في جلب قائمة الجامعات");
     }
   },
 
@@ -580,7 +625,7 @@ export const useAuthStore = create((set, get) => ({
       set({ likeLoading: false });
       return data[0];
     } catch (error) {
-      console.error("Error adding note to favorites:", error);
+      console.log("Error adding note to favorites:", error);
       set({
         likeLoading: false,
         error: error.message || "Failed to add to favorites",
@@ -638,7 +683,7 @@ export const useAuthStore = create((set, get) => ({
 
       return data[0];
     } catch (error) {
-      console.error("Error removing note from favorites:", error);
+      console.log("Error removing note from favorites:", error);
       set({
         likeLoading: false,
         error: error.message || "Failed to remove from favorites",
@@ -665,7 +710,7 @@ export const useAuthStore = create((set, get) => ({
       return data;
     } catch (error) {
       set({ likedListLoading: false, error: error.message });
-      console.error(error.message);
+      console.log(error.message);
     }
   },
 

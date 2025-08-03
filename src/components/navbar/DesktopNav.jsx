@@ -22,7 +22,7 @@ const DesktopNav = ({
 
       {loading ? null : isAuthenticated && user ? (
         <>
-          <Link href="/add-note" passHref legacyBehavior>
+          <Link href="/add-note">
             <Button className="text-base bg-primary hover:bg-primary/90">
               <PlusCircle size={18} className="ml-2" />
               إضافة ملخص

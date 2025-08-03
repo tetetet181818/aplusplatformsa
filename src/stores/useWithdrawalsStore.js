@@ -11,6 +11,9 @@ export const useWithdrawalsStore = create((set, get) => ({
   pageSize: 10,
   totalPages: 1,
   totalCount: 0,
+  totalCountPaid: 0,
+  totalCountPending: 0,
+  totalCountFailed: 0,
   setPage: (page) => set({ page }),
   clearError: () => set({ error: null }),
 
@@ -256,11 +259,25 @@ export const useWithdrawalsStore = create((set, get) => ({
         .order("created_at", { ascending: false })
         .range(from, to);
       if (error) throw error;
-
+      const { error: countError, count: totalPaid } = await supabase
+        .from("withdrawals")
+        .select("*", { count: "exact" })
+        .eq("status", "accepted");
+      const { error: pendingError, count: totalPending } = await supabase
+        .from("withdrawals")
+        .select("*", { count: "exact" })
+        .eq("status", "pending");
+      const { error: rejectedError, count: totalRejected } = await supabase
+        .from("withdrawals")
+        .select("*", { count: "exact" })
+        .eq("status", "rejected");
       set({
         loading: false,
         withdrawals: data,
         totalCount: count,
+        totalCountPaid: totalPaid,
+        totalCountPending: totalPending,
+        totalCountFailed: totalRejected,
         totalPages: Math.ceil(count / pageSize),
       });
 

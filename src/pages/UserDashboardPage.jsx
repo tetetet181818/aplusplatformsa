@@ -217,7 +217,7 @@ const UserDashboardPage = () => {
   const handleTabChange = (value) => {
     const params = new URLSearchParams(searchParams);
     params.set("tab", value);
-    router.replace(`/dashboard?${params.toString()}`);
+    router.replace(`/profile?${params.toString()}`);
   };
 
   if (authLoading) {

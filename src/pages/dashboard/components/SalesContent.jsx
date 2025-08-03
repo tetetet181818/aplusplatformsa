@@ -1,5 +1,12 @@
 "use client";
-import { ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Loader2,
+  Search,
+  ExternalLink,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -31,6 +38,13 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import formatArabicDate from "@/config/formateTime";
 import { useToast } from "@/components/ui/use-toast";
 import Head from "next/head";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 const statusOptions = [
   { value: "all", label: "جميع الحالات" },
@@ -38,6 +52,8 @@ const statusOptions = [
   { value: "pending", label: "قيد الانتظار" },
   { value: "failed", label: "فشل" },
 ];
+
+const commissionRate = 0.15; // 15% commission
 
 export default function SalesContent() {
   const { toast } = useToast();
@@ -54,8 +70,10 @@ export default function SalesContent() {
     setCurrentPage,
     setItemsPerPage,
   } = useSalesStore();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState(null);
   const [searchTimeout, setSearchTimeout] = useState(null);
 
   const totalPages = useMemo(
@@ -67,8 +85,9 @@ export default function SalesContent() {
     () => ({
       search: searchQuery,
       ...(statusFilter !== "all" && { status: statusFilter }),
+      ...(dateFilter && { date: format(dateFilter, "yyyy-MM-dd") }),
     }),
-    [searchQuery, statusFilter]
+    [searchQuery, statusFilter, dateFilter]
   );
 
   const fetchData = useCallback(async () => {
@@ -129,6 +148,22 @@ export default function SalesContent() {
     [setItemsPerPage, setCurrentPage]
   );
 
+  const handleCopyToClipboard = useCallback(
+    (text) => {
+      navigator.clipboard.writeText(text);
+      toast({
+        title: "تم النسخ",
+        description: "تم نسخ رقم العملية بنجاح",
+        variant: "success",
+      });
+    },
+    [toast]
+  );
+
+  const calculateCommission = useCallback((amount) => {
+    return (amount * commissionRate).toLocaleString();
+  }, []);
+
   const columns = useMemo(
     () => [
       {
@@ -147,19 +182,34 @@ export default function SalesContent() {
         header: "رقم العملية",
         accessor: "invoice_id",
         label: "رقم العملية",
-        customRender: (value) => value || "غير متوفر",
-      },
-      {
-        header: "رساله الدفع",
-        accessor: "message",
-        label: "رساله الدفع",
-        customRender: (value) => value || "لا توجد رسالة",
+        customRender: (value) => (
+          <div className="flex items-center gap-2">
+            {value || "غير متوفر"}
+            {value && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => handleCopyToClipboard(value)}
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        ),
       },
       {
         header: "المبلغ",
         accessor: "amount",
         label: "المبلغ",
-        customRender: (amount) => `${(amount || 0).toLocaleString()} ر.س`,
+        customRender: (amount) => (
+          <div className="flex flex-col">
+            <span>${(amount || 0).toLocaleString()} ر.س</span>
+            <span className="text-xs text-muted-foreground">
+              العمولة: {calculateCommission(amount)} ر.س
+            </span>
+          </div>
+        ),
       },
       {
         header: "التاريخ",
@@ -190,8 +240,21 @@ export default function SalesContent() {
           );
         },
       },
+      {
+        header: "الاجراءات",
+        accessor: "id",
+        label: "الاجراءات",
+        customRender: (id) => (
+          <Button variant="ghost" size="sm" asChild>
+            <a href={`/notes/${id}`} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              التفاصيل
+            </a>
+          </Button>
+        ),
+      },
     ],
-    []
+    [handleCopyToClipboard, calculateCommission]
   );
 
   const tableBodyContent = useMemo(() => {
@@ -209,7 +272,7 @@ export default function SalesContent() {
 
     if (sales?.length > 0)
       return sales.map((sale) => (
-        <TableRow key={sale.id}>
+        <TableRow key={sale.id} className="hover:bg-muted/50 transition-colors">
           {columns.map((column) => {
             const value = column.accessor.includes(".")
               ? column.accessor
@@ -230,12 +293,13 @@ export default function SalesContent() {
         <TableCell colSpan={columns.length} className="h-24 text-center">
           <div className="flex flex-col items-center gap-2">
             <p>لا توجد بيانات متاحة</p>
-            {(searchQuery || statusFilter !== "all") && (
+            {(searchQuery || statusFilter !== "all" || dateFilter) && (
               <Button
                 variant="ghost"
                 onClick={() => {
                   setSearchQuery("");
                   setStatusFilter("all");
+                  setDateFilter(null);
                   setCurrentPage(1);
                 }}
               >
@@ -246,72 +310,28 @@ export default function SalesContent() {
         </TableCell>
       </TableRow>
     );
-  }, [loading, sales, columns, searchQuery, statusFilter, setCurrentPage]);
-
-  const mobileCardContent = useMemo(() => {
-    if (loading)
-      return (
-        <div className="rounded-md border p-4">
-          <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <p>جاري تحميل البيانات...</p>
-          </div>
-        </div>
-      );
-
-    if (sales?.length > 0)
-      return sales.map((sale) => (
-        <div key={sale.id} className="rounded-md border p-4">
-          {columns.map((column) => {
-            const value = column.accessor.includes(".")
-              ? column.accessor
-                  .split(".")
-                  .reduce((obj, key) => obj?.[key], sale)
-              : sale[column.accessor];
-            return (
-              <div
-                key={`${sale.id}-${column.accessor}`}
-                className="grid grid-cols-2 gap-2 py-2"
-              >
-                <div className="font-medium text-sm text-muted-foreground">
-                  {column.header}
-                </div>
-                <div className="text-sm">{column.customRender(value)}</div>
-              </div>
-            );
-          })}
-        </div>
-      ));
-
-    return (
-      <div className="rounded-md border p-4 h-24 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-2">
-          <p>لا توجد بيانات متاحة</p>
-          {(searchQuery || statusFilter !== "all") && (
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setSearchQuery("");
-                setStatusFilter("all");
-                setCurrentPage(1);
-              }}
-            >
-              إعادة تعيين الفلتر
-            </Button>
-          )}
-        </div>
-      </div>
-    );
-  }, [loading, sales, columns, searchQuery, statusFilter, setCurrentPage]);
+  }, [
+    loading,
+    sales,
+    columns,
+    searchQuery,
+    statusFilter,
+    dateFilter,
+    setCurrentPage,
+  ]);
 
   return (
     <>
       <Head>
         <title>إدارة المبيعات | لوحة التحكم</title>
+        <meta
+          name="description"
+          content="إدارة معاملات المبيعات وعرض الإحصائيات"
+        />
       </Head>
 
-      <div className="space-y-6">
-        <Card>
+      <div className="space-y-6 animate-fade-in">
+        <Card className="border-border/50 shadow-sm">
           <CardHeader className="pb-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
               <div>
@@ -334,6 +354,27 @@ export default function SalesContent() {
                     disabled={loading}
                   />
                 </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-40 justify-start text-left font-normal"
+                      disabled={loading}
+                    >
+                      {dateFilter
+                        ? format(dateFilter, "yyyy-MM-dd")
+                        : "فلترة بالتاريخ"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFilter}
+                      onSelect={setDateFilter}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <Select
                   value={statusFilter}
                   onValueChange={handleStatusFilterChange}
@@ -359,7 +400,7 @@ export default function SalesContent() {
                 <TableHeader>
                   <TableRow>
                     {columns.map((column) => (
-                      <TableHead key={column.accessor}>
+                      <TableHead className="text-start" key={column.accessor}>
                         {column.header}
                       </TableHead>
                     ))}
@@ -369,7 +410,65 @@ export default function SalesContent() {
               </Table>
             </div>
 
-            <div className="md:hidden space-y-4">{mobileCardContent}</div>
+            <div className="md:hidden space-y-4">
+              {loading ? (
+                <div className="rounded-md border p-4">
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <p>جاري تحميل البيانات...</p>
+                  </div>
+                </div>
+              ) : sales?.length > 0 ? (
+                sales.map((sale) => (
+                  <Card
+                    key={sale.id}
+                    className="hover:shadow-md transition-shadow"
+                  >
+                    <CardContent className="p-4">
+                      {columns.map((column) => {
+                        const value = column.accessor.includes(".")
+                          ? column.accessor
+                              .split(".")
+                              .reduce((obj, key) => obj?.[key], sale)
+                          : sale[column.accessor];
+                        return (
+                          <div
+                            key={`${sale.id}-${column.accessor}`}
+                            className="grid grid-cols-2 gap-2 py-2"
+                          >
+                            <div className="font-medium text-sm text-muted-foreground">
+                              {column.header}
+                            </div>
+                            <div className="text-sm">
+                              {column.customRender(value)}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="rounded-md border p-4 h-24 flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <p>لا توجد بيانات متاحة</p>
+                    {(searchQuery || statusFilter !== "all" || dateFilter) && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setSearchQuery("");
+                          setStatusFilter("all");
+                          setDateFilter(null);
+                          setCurrentPage(1);
+                        }}
+                      >
+                        إعادة تعيين الفلتر
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {totalPages > 1 && (
               <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mt-4">

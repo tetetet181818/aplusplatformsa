@@ -618,6 +618,10 @@ export const useFileStore = create((set, get) => ({
         query = query.ilike("subject", `%${filters.subject}%`);
       }
 
+      if (filters.price) {
+        query = query.ilike("price", `%${filters.price}%`);
+      }
+
       const { data, count, error } = await query;
 
       if (error) throw error;

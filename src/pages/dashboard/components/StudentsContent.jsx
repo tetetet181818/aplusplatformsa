@@ -1,14 +1,25 @@
 "use client";
-import { Eye, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Eye,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Search,
+  School,
+} from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import {
   Table,
@@ -18,23 +29,103 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComp } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 import SectionHeader from "@/components/ui/SectionHeader";
-import formatTime from "@/config/formateTime";
 import GetSingleStudentDialog from "./GetSingleStudentDialog";
 import Head from "next/head";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { universities } from "@/constants/index";
 
 export default function StudentsContent() {
+  const router = useRouter();
   const itemsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const { getAllUsers, loading, error, deleteUserById, searchAboutUser } =
-    useAuthStore();
+  const [dateFilter, setDateFilter] = useState(null);
+  const [universityFilter, setUniversityFilter] = useState(null);
   const [showUser, setShowUser] = useState(false);
-  const [selectUser, setSelectUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [searchMode, setSearchMode] = useState(false);
+
+  const {
+    getAllUsers,
+    loading,
+    error,
+    deleteUserById,
+    searchAboutUser,
+    totalUsers,
+  } = useAuthStore();
+
+  const columns = [
+    {
+      header: "الطالب",
+      accessor: "full_name",
+      label: "الطالب",
+    },
+    {
+      header: "البريد الإلكتروني",
+      accessor: "email",
+      label: "البريد الإلكتروني",
+    },
+    {
+      header: "الجامعة",
+      accessor: "university",
+      label: "الجامعة",
+    },
+    {
+      header: "تاريخ الانضمام",
+      accessor: "created_at",
+      label: "تاريخ الانضمام",
+      customRender: (date) =>
+        format(new Date(date), "yyyy/MM/dd", { locale: ar }),
+    },
+    {
+      header: "الإجراءات",
+      customRender: (user) => (
+        <div className="flex gap-2 justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setShowUser(true);
+              setSelectedUser(user);
+            }}
+            title="عرض التفاصيل"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            onClick={() => handleDeleteUser(user.id)}
+            title="حذف"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  useEffect(() => {
+    fetchUsers(currentPage);
+  }, []);
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -44,13 +135,25 @@ export default function StudentsContent() {
       setSearchMode(true);
       handleSearch(searchQuery, currentPage);
     }
-  }, [currentPage, searchQuery]);
+  }, [currentPage, searchQuery, dateFilter, universityFilter]);
 
   const fetchUsers = async (page) => {
-    const result = await getAllUsers(page, itemsPerPage);
-    if (result) {
-      setUsers(result.data);
-      setTotalItems(result.totalItems);
+    try {
+      let params = { page, itemsPerPage };
+      if (dateFilter) {
+        params.date = format(dateFilter, "yyyy-MM-dd");
+      }
+      if (universityFilter) {
+        params.university = universityFilter;
+      }
+
+      const result = await getAllUsers(params);
+      if (result) {
+        setUsers(result.data);
+        setTotalItems(result.totalItems);
+      }
+    } catch (err) {
+      console.error("Error fetching users:", err);
     }
   };
 
@@ -61,104 +164,179 @@ export default function StudentsContent() {
       return;
     }
 
-    const result = await searchAboutUser({ query, page, itemsPerPage });
-    if (result) {
-      setUsers(result.data);
-      setTotalItems(result.totalItems);
-      setCurrentPage(page);
+    try {
+      const result = await searchAboutUser({
+        query,
+        page,
+        itemsPerPage,
+        ...(dateFilter && { date: format(dateFilter, "yyyy-MM-dd") }),
+        ...(universityFilter && { university: universityFilter }),
+      });
+
+      if (result) {
+        setUsers(result.data);
+        setTotalItems(result.totalItems);
+        setCurrentPage(page);
+      }
+    } catch (err) {
+      console.error("Search error:", err);
+    }
+  };
+
+  const handleDeleteUser = async (id) => {
+    if (!confirm("هل أنت متأكد من حذف هذا الطالب؟")) return;
+
+    try {
+      await deleteUserById({ id });
+      fetchUsers(currentPage);
+    } catch (err) {
+      console.error("Delete error:", err);
     }
   };
 
   const handlePageChange = (newPage) => {
-    if (newPage > 0 && newPage <= Math.ceil(totalItems / itemsPerPage)) {
-      setCurrentPage(newPage);
-    }
+    setCurrentPage(newPage);
+  };
+
+  const clearFilters = () => {
+    setDateFilter(null);
+    setUniversityFilter(null);
+    setCurrentPage(1);
   };
 
   const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-  const columns = [
-    { header: "الطالب", accessor: "full_name", label: "الطالب" },
-    {
-      header: "البريد الإلكتروني",
-      accessor: "email",
-      label: "البريد الإلكتروني",
-    },
-    {
-      header: "تاريخ الانضمام",
-      accessor: "created_at",
-      label: "تاريخ الانضمام",
-      customRender: (date) => formatTime(date),
-    },
-    {
-      header: "الإجراءات",
-      customRender: (item) => (
-        <div className="flex gap-2 justify-end">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setShowUser(true);
-              setSelectUser(item);
-            }}
-            title="عرض التفاصيل"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-red-500 hover:text-red-700"
-            onClick={() => deleteUserById({ id: item.id })}
-            title="حذف"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
 
   return (
     <>
       <Head>
         <title>إدارة الطلاب | لوحة التحكم</title>
+        <meta
+          name="description"
+          content="إدارة قاعدة بيانات الطلاب في النظام"
+        />
       </Head>
 
       <div className="space-y-6 animate-fade-in">
         <SectionHeader title="الطلاب" description="إدارة قاعدة الطلاب" />
 
-        <Card className="border-0 shadow-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="hover:shadow-md transition-shadow">
+            <CardContent className="py-6 text-center">
+              <h2 className="text-3xl font-bold text-primary">
+                إجمالي عدد الطلاب
+              </h2>
+              <p className="text-2xl font-bold mt-3">{totalUsers}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow">
+            <CardContent className="py-6 text-center">
+              <h2 className="text-3xl font-bold text-primary">
+                الطلاب النشطين
+              </h2>
+              <p className="text-2xl font-bold mt-3">0</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="pb-4">
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
               <div>
-                <CardTitle className="text-xl font-semibold">الطلاب</CardTitle>
+                <CardTitle className="text-xl font-semibold">
+                  قائمة الطلاب
+                </CardTitle>
                 <CardDescription>
                   {searchMode ? "نتائج البحث" : "جميع الطلاب المسجلين"}
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="البحث عن الطلاب بالاسم..."
-                  className="px-3 py-2 border rounded-md text-sm w-full sm:w-64"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    const query = e.target.value;
-                    setSearchQuery(query);
-                    const timer = setTimeout(() => handleSearch(query, 1), 500);
-                    return () => clearTimeout(timer);
-                  }}
-                  disabled={loading}
-                />
+
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="البحث عن الطلاب..."
+                    className="pl-10 pr-3 py-2 rounded-md text-sm w-full"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      const query = e.target.value;
+                      setSearchQuery(query);
+                      const timer = setTimeout(
+                        () => handleSearch(query, 1),
+                        500
+                      );
+                      return () => clearTimeout(timer);
+                    }}
+                    disabled={loading}
+                  />
+                </div>
+
+                <Select
+                  value={universityFilter}
+                  onValueChange={setUniversityFilter}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <div className="flex items-center gap-2">
+                      <School className="h-4 w-4" />
+                      <SelectValue placeholder="الجامعة" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>جميع الجامعات</SelectItem>
+                    {universities.map((uni) => (
+                      <SelectItem key={uni} value={uni}>
+                        {uni}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="justify-start text-left font-normal"
+                    >
+                      <Calendar className="h-4 w-4 ml-2" />
+                      {dateFilter ? (
+                        format(dateFilter, "yyyy/MM/dd", { locale: ar })
+                      ) : (
+                        <span>التاريخ</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComp
+                      mode="single"
+                      selected={dateFilter}
+                      onSelect={setDateFilter}
+                      initialFocus
+                      locale={ar}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                {(dateFilter || universityFilter) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-500"
+                    onClick={clearFilters}
+                  >
+                    مسح الفلاتر
+                  </Button>
+                )}
               </div>
             </div>
           </CardHeader>
+
           <CardContent>
-            <div className="block md:hidden">
+            {/* Mobile View */}
+            <div className="block md:hidden space-y-4">
               {loading ? (
                 Array.from({ length: 5 }).map((_, index) => (
-                  <Card key={index} className="mb-4">
+                  <Card key={index} className="animate-pulse">
                     <CardContent className="pt-4 space-y-3">
                       <Skeleton className="h-4 w-3/4" />
                       <Skeleton className="h-4 w-1/2" />
@@ -167,14 +345,14 @@ export default function StudentsContent() {
                   </Card>
                 ))
               ) : error ? (
-                <Card className="mb-4">
-                  <CardContent className="pt-4 text-center text-red-500">
+                <Card className="border-destructive/20 bg-destructive/10">
+                  <CardContent className="pt-4 text-center text-destructive">
                     {error}
                   </CardContent>
                 </Card>
               ) : users?.length === 0 ? (
-                <Card className="mb-4">
-                  <CardContent className="pt-4 text-center">
+                <Card>
+                  <CardContent className="pt-4 text-center text-muted-foreground">
                     {searchMode
                       ? "لا توجد نتائج مطابقة للبحث"
                       : "لا توجد بيانات طلاب لعرضها"}
@@ -184,7 +362,7 @@ export default function StudentsContent() {
                 users?.map((user, index) => (
                   <Card
                     key={user.id}
-                    className="mb-4 border-muted/30 animate-slide-in"
+                    className="border-muted/30 animate-slide-in hover:shadow-sm"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     <CardContent className="pt-4">
@@ -206,28 +384,9 @@ export default function StudentsContent() {
                               </span>
                             </div>
                           ))}
-                        <div className="flex justify-end gap-2 pt-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setShowUser(true);
-                              setSelectUser(user);
-                            }}
-                            title="عرض التفاصيل"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-500 hover:text-red-700"
-                            onClick={() => deleteUserById({ id: user.id })}
-                            title="حذف"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        {columns
+                          .find((col) => col.header === "الإجراءات")
+                          ?.customRender(user)}
                       </div>
                     </CardContent>
                   </Card>
@@ -235,10 +394,11 @@ export default function StudentsContent() {
               )}
             </div>
 
+            {/* Desktop View */}
             <div className="hidden md:block">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-muted/50">
+                  <TableRow className="hover:bg-transparent">
                     {columns.map((column, index) => (
                       <TableHead
                         key={index}
@@ -264,7 +424,7 @@ export default function StudentsContent() {
                     <TableRow>
                       <TableCell
                         colSpan={columns.length}
-                        className="text-center text-red-500 py-4"
+                        className="text-center py-4 text-destructive"
                       >
                         {error}
                       </TableCell>
@@ -273,7 +433,7 @@ export default function StudentsContent() {
                     <TableRow>
                       <TableCell
                         colSpan={columns.length}
-                        className="text-center py-4"
+                        className="text-center py-4 text-muted-foreground"
                       >
                         {searchMode
                           ? "لا توجد نتائج مطابقة للبحث"
@@ -284,7 +444,7 @@ export default function StudentsContent() {
                     users?.map((user, index) => (
                       <TableRow
                         key={user.id}
-                        className="border-b border-muted/30 hover:bg-muted/30 transition-colors animate-slide-in"
+                        className="border-muted/30 hover:bg-muted/10 animate-slide-in"
                         style={{ animationDelay: `${index * 0.05}s` }}
                       >
                         {columns.map((column, colIndex) => (
@@ -303,11 +463,12 @@ export default function StudentsContent() {
               </Table>
             </div>
 
+            {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-between items-center mt-4">
+              <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
                 <div className="text-sm text-muted-foreground">
                   {loading ? (
-                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-48" />
                   ) : (
                     `عرض ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
                       currentPage * itemsPerPage,
@@ -346,12 +507,12 @@ export default function StudentsContent() {
         </Card>
       </div>
 
+      {/* Student Details Dialog */}
       {showUser && (
         <GetSingleStudentDialog
-          setShowUser={setShowUser}
-          showUser={showUser}
-          selectUser={selectUser}
-          setSelectUser={setSelectUser}
+          open={showUser}
+          onOpenChange={setShowUser}
+          student={selectedUser}
         />
       )}
     </>

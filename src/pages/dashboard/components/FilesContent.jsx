@@ -4,7 +4,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
-  Loader2,
+  Loader,
+  School,
+  DollarSign,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useFileStore } from "@/stores/useFileStore";
@@ -52,6 +54,9 @@ export default function FilesContent() {
     college: "",
     subject: "",
     year: "",
+    priceMin: "",
+    priceMax: "",
+    priceOperator: "", // 'gt' (greater than), 'lt' (less than), or empty
   });
   const [showFilters, setShowFilters] = useState(false);
 
@@ -73,7 +78,6 @@ export default function FilesContent() {
 
   useEffect(() => {
     fetchNotes(currentPage);
-    fetchUniversities();
   }, [currentPage, debouncedSearchQuery, filters]);
 
   useEffect(() => {
@@ -93,11 +97,6 @@ export default function FilesContent() {
     if (result) setTotalItems(result.totalItems);
   };
 
-  const fetchUniversities = async () => {
-    const data = await getUniversities();
-    setUniversities(data);
-  };
-
   const fetchColleges = async (university) => {
     const data = await getCollegesByUniversity(university);
     setColleges(data);
@@ -114,8 +113,22 @@ export default function FilesContent() {
     setCurrentPage(1);
   };
 
+  const handlePriceFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+    setCurrentPage(1);
+  };
+
   const resetFilters = () => {
-    setFilters({ university: "", college: "", subject: "", year: "" });
+    setFilters({
+      university: "",
+      college: "",
+      subject: "",
+      year: "",
+      priceMin: "",
+      priceMax: "",
+      priceOperator: "",
+    });
     setSearchQuery("");
     setCurrentPage(1);
   };
@@ -150,7 +163,7 @@ export default function FilesContent() {
             disabled={downloadLoading}
           >
             {downloadLoading ? (
-              <Loader2 className="animate-spin h-4 w-4" />
+              <Loader className="animate-spin h-4 w-4" />
             ) : (
               <Download className="h-4 w-4" />
             )}
@@ -161,7 +174,10 @@ export default function FilesContent() {
   ];
 
   const hasActiveFilters =
-    debouncedSearchQuery || Object.values(filters).some(Boolean);
+    debouncedSearchQuery ||
+    Object.values(filters).some(
+      (value) => value !== "" && value !== null && value !== undefined
+    );
 
   return (
     <>
@@ -206,59 +222,98 @@ export default function FilesContent() {
               </div>
 
               {showFilters && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
-                  <Select
-                    value={filters.university}
-                    onValueChange={(value) =>
-                      handleFilterChange("university", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="كل الجامعات" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {universities.map((uni) => (
-                        <SelectItem key={uni} value={uni}>
-                          {uni}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select
-                    value={filters.college}
-                    onValueChange={(value) =>
-                      handleFilterChange("college", value)
-                    }
-                    disabled={!filters.university}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="كل الكليات" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {colleges.map((college) => (
-                        <SelectItem key={college} value={college}>
-                          {college}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Input
-                    placeholder="السنة"
-                    value={filters.year}
-                    onChange={(e) => handleFilterChange("year", e.target.value)}
-                  />
-
-                  {hasActiveFilters && (
-                    <Button
-                      variant="ghost"
-                      className="text-destructive"
-                      onClick={resetFilters}
+                <div className="w-full p-4 bg-muted/50 rounded-lg mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full">
+                    <Select
+                      value={filters.university}
+                      onValueChange={(value) =>
+                        handleFilterChange("university", value)
+                      }
                     >
-                      مسح الفلاتر
-                    </Button>
-                  )}
+                      <SelectTrigger className="w-full">
+                        <div className="flex items-center gap-2">
+                          <School className="h-4 w-4 opacity-70" />
+                          <SelectValue placeholder="كل الجامعات" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {universities.map((uni) => (
+                          <SelectItem key={uni} value={uni}>
+                            {uni}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={filters.college}
+                      onValueChange={(value) =>
+                        handleFilterChange("college", value)
+                      }
+                      disabled={!filters.university}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="كل الكليات" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {colleges.map((college) => (
+                          <SelectItem key={college} value={college}>
+                            {college}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Input
+                      placeholder="السنة"
+                      className="w-full"
+                      value={filters.year}
+                      onChange={(e) =>
+                        handleFilterChange("year", e.target.value)
+                      }
+                    />
+
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 opacity-70" />
+                        <span className="text-sm">فلترة السعر</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Select
+                          value={filters.priceOperator}
+                          onValueChange={(value) =>
+                            handleFilterChange("priceOperator", value)
+                          }
+                        >
+                          <SelectTrigger className="w-20">
+                            <SelectValue placeholder="-" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="gt">أكبر من</SelectItem>
+                            <SelectItem value="lt">أقل من</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="number"
+                          placeholder="المبلغ"
+                          className="flex-1"
+                          name="priceMin"
+                          value={filters.priceMin}
+                          onChange={handlePriceFilterChange}
+                        />
+                      </div>
+                    </div>
+
+                    {hasActiveFilters && (
+                      <Button
+                        variant="ghost"
+                        className="text-destructive w-full sm:w-auto"
+                        onClick={resetFilters}
+                      >
+                        مسح الفلاتر
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -270,7 +325,9 @@ export default function FilesContent() {
                 <TableHeader>
                   <TableRow>
                     {columns.map((column, index) => (
-                      <TableHead key={index}>{column.header}</TableHead>
+                      <TableHead className={"text-start"} key={index}>
+                        {column.header}
+                      </TableHead>
                     ))}
                   </TableRow>
                 </TableHeader>
@@ -377,7 +434,7 @@ export default function FilesContent() {
                           disabled={downloadLoading}
                         >
                           {downloadLoading ? (
-                            <Loader2 className="animate-spin h-4 w-4" />
+                            <Loader className="animate-spin h-4 w-4" />
                           ) : (
                             <Download className="h-4 w-4" />
                           )}

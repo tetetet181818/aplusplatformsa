@@ -123,7 +123,7 @@ const ProfileInfoTab = ({
               className="pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-col justify-center sm:flex-row gap-3"
             >
               <Button className=" space-y-2">
-                <Link to={"/reset-password"}>
+                <Link href={"/reset-password"}>
                   <Edit3 className="h-4 w-4" />
                   <span> تعديل كلمه المرور</span>
                 </Link>

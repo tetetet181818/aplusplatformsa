@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -7,7 +8,6 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-
 import { DollarSign, BarChart3, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
@@ -20,41 +20,37 @@ import {
 } from "@/components/ui/accordion";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-
+import Image from "next/image";
 import WithdrawalForm from "./WithdrawalForm";
-import { useWithdrawalsStore } from "../../stores/useWithdrawalsStore";
-import MyImage from "../LazyLoadingImage";
+import { useWithdrawalsStore } from "@/stores/useWithdrawalsStore";
 
-const MAX_WITHDRAWALS_PER_MONTH = import.meta.env
-  .VITE_MAX_WITHDRAWALS_PER_MONTH;
-const PLATFORM_FEE_PERCENTAGE = import.meta.env.VITE_PLATFORM_FEE_PERCENTAGE;
+const PLATFORM_FEE_PERCENTAGE = 0.15;
 
 const EarningsTab = ({ currentUser, getSellerNotes }) => {
+  const router = useRouter();
   const { toast } = useToast();
   const [availableBalance, setAvailableBalance] = useState(0);
-  useEffect(() => {
-    setAvailableBalance(currentUser?.balance);
-  }, [setAvailableBalance]);
-  const [sellerStats, setSellerStats] = useState();
-
-  const [totalGrossSales, setTotalGrossSales] = useState(0);
-
-  const [withdrawalAmount, setWithdrawalAmount] = useState(0);
-  useEffect(() => {
-    setWithdrawalAmount(availableBalance - totalGrossSales);
-  }, []);
+  const [sellerStats, setSellerStats] = useState([]);
   const [isProcessingWithdrawal, setIsProcessingWithdrawal] = useState(false);
-  const { createWithdrawalOrder, loading } = useWithdrawalsStore(
-    (state) => state
-  );
-  function calculateTransaction(availableBalance) {
-    const earning = availableBalance * 0.15;
-    setTotalGrossSales(earning);
-  }
+  const { createWithdrawalOrder, loading } = useWithdrawalsStore();
 
   useEffect(() => {
-    calculateTransaction(availableBalance);
-  }, [calculateTransaction]);
+    if (currentUser?.balance) {
+      setAvailableBalance(currentUser.balance);
+    }
+  }, [currentUser]);
+
+  const calculatePlatformFee = useCallback(
+    (balance) => balance * PLATFORM_FEE_PERCENTAGE,
+    []
+  );
+
+  const calculateNetEarnings = useCallback(
+    (balance) => balance - calculatePlatformFee(balance),
+    [calculatePlatformFee]
+  );
+
+  const calculateTotalPrice = (price, downloads) => price * downloads;
 
   const formik = useFormik({
     initialValues: {
@@ -63,7 +59,7 @@ const EarningsTab = ({ currentUser, getSellerNotes }) => {
       iban: "",
       withdrawalAmount: "",
     },
-    validationSchema: Yup.object().shape({
+    validationSchema: Yup.object({
       accountHolderName: Yup.string()
         .trim()
         .required("اسم صاحب الحساب مطلوب")
@@ -84,19 +80,25 @@ const EarningsTab = ({ currentUser, getSellerNotes }) => {
       withdrawalAmount: Yup.number()
         .required("مبلغ السحب مطلوب")
         .min(3, "الحد الأدنى للسحب هو 3 ريال")
-        .test(
-          Yup.ref(`${withdrawalAmount}`),
-          "لا يمكنك سحب مبلغ أكبر من رصيدك المتاح",
-          function (value) {
-            return value <= availableBalance;
-          }
-        ),
+        .max(availableBalance, "لا يمكنك سحب مبلغ أكبر من رصيدك المتاح"),
     }),
     onSubmit: async (values, { resetForm }) => {
-      console.log(values);
-      let res = await createWithdrawalOrder({ id: currentUser?.id, ...values });
-      if (res) {
-        resetForm();
+      try {
+        const res = await createWithdrawalOrder({
+          id: currentUser?.id,
+          ...values,
+        });
+        if (res) {
+          toast({ title: "تم تقديم طلب السحب بنجاح" });
+          resetForm();
+          router.refresh();
+        }
+      } catch (error) {
+        toast({
+          title: "حدث خطأ",
+          description: error.message,
+          variant: "destructive",
+        });
       }
     },
   });
@@ -106,134 +108,143 @@ const EarningsTab = ({ currentUser, getSellerNotes }) => {
       if (currentUser?.id) {
         try {
           const userNotes = await getSellerNotes({ sellerId: currentUser.id });
-          setSellerStats(userNotes);
+          setSellerStats(userNotes || []);
         } catch (error) {
-          console.error("Error calculating seller stats:", error);
+          toast({
+            title: "حدث خطأ",
+            description: "تعذر تحميل إحصائيات البائع",
+            variant: "destructive",
+          });
         }
       }
     };
 
     fetchSellerStats();
-  }, [currentUser?.id, getSellerNotes]);
+  }, [currentUser?.id, getSellerNotes, toast]);
 
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
+    hover: { scale: 1.02, transition: { duration: 0.2 } },
   };
 
-  const platformFee = useCallback((balance) => {
-    return balance * PLATFORM_FEE_PERCENTAGE;
-  }, []);
+  const currentNetEarnings = calculateNetEarnings(availableBalance);
 
-  const netEarnings = useCallback(
-    (balance) => balance - platformFee(balance),
-    [platformFee]
-  );
-  const currentNetEarnings = netEarnings(availableBalance);
-  const calcTotalPrice = (price, downloads) => {
-    return price * downloads;
-  };
-  console.log(currentUser);
   return (
     <motion.div
-      className="space-y-8"
+      className="space-y-6"
       initial="hidden"
       animate="visible"
       variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
     >
-      <motion.div variants={cardVariants}>
-        <Card className="shadow-xl border-transparent bg-gradient-to-br from-green-500 to-emerald-600 text-white overflow-hidden">
+      <motion.div variants={cardVariants} whileHover="hover">
+        <Card className="bg-gradient-to-br from-primary to-primary/90 text-white border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl font-bold flex items-center gap-2">
-              <DollarSign className="h-7 w-7" />
+              <DollarSign className="h-6 w-6" />
               الرصيد المتاح للسحب
             </CardTitle>
-            <CardDescription className="text-green-100">
-              هذا هو المبلغ الذي يمكنك سحبه حاليًا.
+            <CardDescription className="text-primary-foreground/80">
+              هذا هو المبلغ الذي يمكنك سحبه حاليًا بعد خصم رسوم المنصة
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-5xl font-extrabold tracking-tight">
-              {availableBalance?.toFixed(2)}{" "}
-              <span className="text-2xl font-normal">ريال</span>
-            </p>
-            <p className="text-sm text-green-200 mt-1">
-              يتم احتساب الرصيد بعد خصم رسوم المنصة (15%).
+            <p className="text-4xl font-bold tracking-tight">
+              {currentNetEarnings.toFixed(2)}{" "}
+              <span className="text-xl font-medium">ريال</span>
             </p>
           </CardContent>
         </Card>
       </motion.div>
 
-      <motion.div variants={cardVariants}>
-        <Card className="shadow-lg border-gray-200 dark:border-gray-700">
+      <motion.div variants={cardVariants} whileHover="hover">
+        <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-              <BarChart3 className="h-6 w-6 text-primary" />
+            <CardTitle className="text-xl font-semibold flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
               ملخص المبيعات
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <p className="text-gray-600 dark:text-gray-300">
-                إجمالي المبيعات:
-              </p>
-              <p className="font-bold text-lg text-green-600 dark:text-green-400">
-                {availableBalance?.toFixed(2)} ريال
-              </p>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">
+                  إجمالي المبيعات:
+                </p>
+                <p className="text-lg font-semibold">
+                  {availableBalance.toFixed(2)} ريال
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">
+                  رسوم المنصة (15%):
+                </p>
+                <p className="text-lg font-semibold text-destructive">
+                  -{calculatePlatformFee(availableBalance).toFixed(2)} ريال
+                </p>
+              </div>
             </div>
-            <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-gray-700 dark:text-gray-200 font-semibold">
-                صافي الأرباح (الرصيد المتاح):
-              </p>
-              <p className="font-bold text-xl text-primary dark:text-primary-light">
-                {availableBalance.toFixed(2)} ريال
-              </p>
+
+            <div className="pt-3 border-t">
+              <div className="flex justify-between items-center">
+                <p className="font-medium">صافي الأرباح:</p>
+                <p className="text-xl font-bold text-primary">
+                  {currentNetEarnings.toFixed(2)} ريال
+                </p>
+              </div>
             </div>
-            {sellerStats?.length > 0 && (
-              <Accordion type="single" collapsible className="w-full pt-3">
+
+            {sellerStats.length > 0 && (
+              <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="sales-details">
-                  <AccordionTrigger className="text-sm text-primary hover:no-underline font-medium">
-                    <div className="flex items-center gap-1">
+                  <AccordionTrigger className="hover:no-underline py-3">
+                    <div className="flex items-center gap-2 text-sm font-medium">
                       تفاصيل مبيعات الملخصات
                       <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="pt-4">
-                    <ScrollArea className="h-[300px] pr-3">
-                      <div className="space-y-4">
+                  <AccordionContent>
+                    <ScrollArea className="h-72 pr-3">
+                      <div className="space-y-3">
                         {sellerStats.map((note) => (
-                          <div
+                          <motion.div
                             key={note.id}
-                            className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-800/30 hover:shadow-sm transition-shadow"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                            className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:shadow-sm"
                           >
-                            <MyImage
-                              alt={note.title}
-                              src={note.cover_url}
-                              className="h-16 w-16 rounded-md object-cover"
-                            />
-                            <div className="flex-grow">
-                              <h4 className="font-semibold text-sm text-gray-800 dark:text-white">
+                            <div className="relative h-14 w-14 flex-shrink-0">
+                              <Image
+                                src={note.cover_url}
+                                alt={note.title}
+                                fill
+                                className="rounded-md object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm truncate">
                                 {note.title}
                               </h4>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                السعر: {note.price.toFixed(2)} ريال | المبيعات:{" "}
-                                {/* {note.salesCount} */}
-                                {note?.downloads}
+                              <p className="text-xs text-muted-foreground">
+                                {note.downloads} تحميلات |{" "}
+                                {note.price.toFixed(2)} ريال
                               </p>
                             </div>
                             <div className="text-right">
-                              <p className="font-semibold text-sm text-green-600 dark:text-green-400">
-                                {calcTotalPrice(
+                              <p className="font-semibold text-sm">
+                                {calculateTotalPrice(
                                   note.price,
                                   note.downloads
-                                )?.toFixed(2)}{" "}
+                                ).toFixed(2)}{" "}
                                 ريال
                               </p>
-                              <p className="text-xs text-gray-400 dark:text-gray-500">
-                                إجمالي من هذا الملخص
-                              </p>
                             </div>
-                          </div>
+                          </motion.div>
                         ))}
                       </div>
                     </ScrollArea>
@@ -246,20 +257,22 @@ const EarningsTab = ({ currentUser, getSellerNotes }) => {
       </motion.div>
 
       <motion.div variants={cardVariants}>
-        {currentUser.withdrawal_times !== 0 && (
+        {currentUser.withdrawal_times > 0 ? (
           <WithdrawalForm
             formik={formik}
             isProcessingWithdrawal={isProcessingWithdrawal}
             netEarnings={currentNetEarnings}
-            remainingWithdrawals={true}
-            maxWithdrawalsPerMonth={2}
+            remainingWithdrawals={currentUser.withdrawal_times}
             loading={loading}
           />
-        )}
-        {currentUser.withdrawal_times === 0 && (
-          <div className="text-center border rounded-lg py-10 font-semibold text-red-700">
-            <h1>عفوا لقد استهلكت كل محاولات الاسترداد هذا الشهر</h1>
-          </div>
+        ) : (
+          <Card className="border-destructive/20 bg-destructive/10">
+            <CardContent className="p-6 text-center">
+              <p className="font-semibold text-destructive">
+                لقد استهلكت كل محاولات السحب المتاحة هذا الشهر
+              </p>
+            </CardContent>
+          </Card>
         )}
       </motion.div>
     </motion.div>

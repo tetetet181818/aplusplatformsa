@@ -1,5 +1,9 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { NotificationPanel } from "@/components/notifications/NotificationBell";
+import { Toaster } from "@/components/ui/toaster";
+import Layout from "@/components/Layout";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,7 +63,6 @@ export default function RootLayout({ children }) {
       <head>
         <meta charSet="UTF-8" />
         <link rel="icon" type="image/png" href="/public/favicon.ico" />
-        <meta name="generator" content="Hostinger Horizons" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -75,7 +78,10 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ScrollToTop />
+        <Layout>{children}</Layout>
+        <Toaster position="top-center" reverseOrder={false} />
+        <NotificationPanel />
       </body>
     </html>
   );
