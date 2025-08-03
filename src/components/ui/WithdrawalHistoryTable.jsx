@@ -1,6 +1,5 @@
 "use client";
 import {
-  Eye,
   MoreHorizontal,
   X,
   Check,
@@ -44,6 +43,16 @@ import { useState } from "react";
 import { useWithdrawalsStore } from "@/stores/useWithdrawalsStore";
 import Head from "next/head";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const statusVariantMap = {
   pending: "default",
@@ -105,12 +114,16 @@ export default function WithdrawalHistoryTable() {
     acceptedWithdrawalOrder,
     rejectedWithdrawalOrder,
     deleteWithdrawalOrder,
+    updateWithdrawalNotes,
+    completeWithdrawalOrder,
   } = useWithdrawalsStore();
 
   const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [actionType, setActionType] = useState(null);
+  const [transferNumber, setTransferNumber] = useState("");
+  const [transferDate, setTransferDate] = useState(null);
 
   const handleActionWithNote = async () => {
     if (!selectedWithdrawal || !actionType) return;
@@ -121,15 +134,29 @@ export default function WithdrawalHistoryTable() {
         admin_notes: adminNotes || "لا توجد ملاحظات",
       };
 
+      // First update the notes
+      await updateWithdrawalNotes(payload);
+
+      // Then perform the action
       if (actionType === "accept") {
         await acceptedWithdrawalOrder(payload);
-      } else {
+      } else if (actionType === "reject") {
         await rejectedWithdrawalOrder(payload);
+      } else if (actionType === "complete") {
+        await completeWithdrawalOrder({
+          ...payload,
+          transfer_number: transferNumber,
+          transfer_date: transferDate
+            ? format(transferDate, "yyyy-MM-dd")
+            : null,
+        });
       }
 
       await getWithdrawals();
       setIsDialogOpen(false);
       setAdminNotes("");
+      setTransferNumber("");
+      setTransferDate(null);
     } catch (error) {
       console.error("فشل تنفيذ الإجراء:", error);
     }
@@ -197,7 +224,7 @@ export default function WithdrawalHistoryTable() {
               <DropdownMenuItem
                 onClick={() => {
                   setSelectedWithdrawal(withdrawal);
-                  setActionType("reject");
+                  setActionType("complete");
                   setIsDialogOpen(true);
                 }}
                 className="cursor-pointer"
@@ -271,29 +298,90 @@ export default function WithdrawalHistoryTable() {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>
-                {actionType === "accept" ? "قبول طلب السحب" : "رفض طلب السحب"}
+                {actionType === "accept"
+                  ? "قبول طلب السحب"
+                  : actionType === "reject"
+                  ? "رفض طلب السحب"
+                  : "إكمال العملية"}
               </DialogTitle>
               <DialogDescription>
                 {actionType === "accept"
                   ? "يرجى إضافة ملاحظات قبل قبول الطلب"
-                  : "يرجى توضيح سبب الرفض"}
+                  : actionType === "reject"
+                  ? "يرجى توضيح سبب الرفض"
+                  : "يرجى إضافة تفاصيل التحويل"}
               </DialogDescription>
             </DialogHeader>
+
             <Textarea
               placeholder="أدخل ملاحظاتك هنا..."
               value={adminNotes}
               onChange={(e) => setAdminNotes(e.target.value)}
               className="min-h-[120px]"
             />
+
+            {actionType === "complete" && (
+              <div className="space-y-4">
+                <Input
+                  placeholder="رقم التحويل"
+                  value={transferNumber}
+                  onChange={(e) => setTransferNumber(e.target.value)}
+                  required
+                />
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !transferDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {transferDate ? (
+                        format(transferDate, "yyyy-MM-dd")
+                      ) : (
+                        <span>تاريخ التحويل</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={transferDate}
+                      onSelect={setTransferDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 إلغاء
               </Button>
               <Button
                 onClick={handleActionWithNote}
-                variant={actionType === "accept" ? "default" : "destructive"}
+                disabled={
+                  loading ||
+                  (actionType === "complete" &&
+                    (!transferNumber || !transferDate))
+                }
+                variant={
+                  actionType === "accept"
+                    ? "default"
+                    : actionType === "complete"
+                    ? "success"
+                    : "destructive"
+                }
               >
-                {actionType === "accept" ? "تأكيد القبول" : "تأكيد الرفض"}
+                {actionType === "accept"
+                  ? "تأكيد القبول"
+                  : actionType === "complete"
+                  ? "تأكيد الإكمال"
+                  : "تأكيد الرفض"}
                 {loading && <Loader2 className="animate-spin ml-2 h-4 w-4" />}
               </Button>
             </DialogFooter>

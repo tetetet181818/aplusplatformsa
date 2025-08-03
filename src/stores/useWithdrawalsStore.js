@@ -287,6 +287,31 @@ export const useWithdrawalsStore = create((set, get) => ({
       return null;
     }
   },
+  updateWithdrawalNotes: async (payload) => {
+    try {
+      set({ loading: true });
+
+      const { data, error } = await supabase
+        .from("withdrawals")
+        .update({ admin_notes: payload.admin_notes })
+        .eq("id", payload.id)
+        .select();
+
+      if (error) throw error;
+
+      set((state) => ({
+        withdrawals: state.withdrawals.map((w) =>
+          w.id === payload.id ? { ...w, admin_notes: payload.admin_notes } : w
+        ),
+        loading: false,
+      }));
+
+      return data;
+    } catch (error) {
+      set({ loading: false, error: error.message });
+      throw error;
+    }
+  },
 
   getWithdrawalById: async ({ userId }) => {
     set({ loading: true, error: null });
