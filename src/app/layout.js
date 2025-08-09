@@ -1,9 +1,6 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { NotificationPanel } from "@/components/notifications/NotificationBell";
-import { Toaster } from "@/components/ui/toaster";
-import Layout from "@/components/Layout";
-import ScrollToTop from "@/components/ScrollToTop";
+import { Geist, Geist_Mono } from "next/font/google";
+import LayoutClient from "@/components/LayoutClient"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +29,7 @@ export const metadata = {
   creator: "A+ Team",
   openGraph: {
     title: "سوق الملخصات الجامعية",
-    description: "اشترِ أو بع ملخصاتك الجامعية بسهولة وأمان عبر منصة منصة A+",
+    description: "اشترِ أو بع ملخصاتك الجامعية بسهولة وأمان عبر منصة A+",
     url: "https://aplusplatformsa.com",
     siteName: "سوق الملخصات الجامعية",
     locale: "ar_EG",
@@ -59,29 +56,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" dir="rtl">
-      <head>
-        <meta charSet="UTF-8" />
-        <link rel="icon" type="image/png" href="/public/favicon.ico" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin={"true"}
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="ar" dir="rtl">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ScrollToTop />
-        <Layout>{children}</Layout>
-        <Toaster position="top-center" reverseOrder={false} />
-        <NotificationPanel />
+        <LayoutClient>{children}</LayoutClient>
       </body>
     </html>
   );

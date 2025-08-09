@@ -15,7 +15,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { loginSchema } from "@/utils/validation/authValidation";
 import { useFormik } from "formik";
 import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import GoogleLoginButton from "./GoogleLoginButton";
 import Link from "next/link";
 
@@ -37,14 +37,27 @@ const LoginDialog = ({ isOpen, onClose, onSwitchToRegister }) => {
     },
   });
 
-  if (error) {
-    toast({
-      title: "فشل تسجيل الدخول",
-      description: error,
-      variant: "destructive",
-    });
-    clearError();
-  }
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "فشل تسجيل الدخول",
+        description: error,
+        variant: "destructive",
+      });
+
+      // تنظيف الايرور بعد ثانيتين
+      const timeout = setTimeout(() => {
+        clearError();
+      }, 2000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [error]);
+
+
+
+
+  
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -55,6 +68,14 @@ const LoginDialog = ({ isOpen, onClose, onSwitchToRegister }) => {
             مرحبا بعودتك قم بتسجيل الدخول للوصول للصفحة الرئيسية
           </DialogDescription>
         </DialogHeader>
+
+
+        <p className="text-center text-sm text-muted-foreground mb-2">
+          سجّل دخولك بواسطة Google
+        </p>
+        <GoogleLoginButton />
+
+        <br />
 
         <form onSubmit={formik.handleSubmit} className="space-y-6">
           <div className="space-y-4">
@@ -141,7 +162,6 @@ const LoginDialog = ({ isOpen, onClose, onSwitchToRegister }) => {
         </form>
 
         <div className="space-y-4">
-          <GoogleLoginButton />
           <p className="text-center text-sm text-muted-foreground">
             لا تمتلك حساب؟{" "}
             <button

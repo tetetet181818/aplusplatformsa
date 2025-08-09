@@ -171,12 +171,14 @@ export default function SalesContent() {
         accessor: "files.title",
         label: "الدورة",
         customRender: (value) => value || "غير محدد",
+        className: "min-w-[120px]",
       },
       {
         header: "الطالب",
         accessor: "users.full_name",
         label: "الطالب",
         customRender: (value) => value || "غير محدد",
+        className: "min-w-[150px]",
       },
       {
         header: "رقم العملية",
@@ -197,6 +199,7 @@ export default function SalesContent() {
             )}
           </div>
         ),
+        className: "min-w-[150px]",
       },
       {
         header: "المبلغ",
@@ -210,6 +213,7 @@ export default function SalesContent() {
             </span>
           </div>
         ),
+        className: "min-w-[120px]",
       },
       {
         header: "التاريخ",
@@ -217,6 +221,7 @@ export default function SalesContent() {
         label: "التاريخ",
         customRender: (date) =>
           date ? formatArabicDate(date, { hijri: true }) : "غير محدد",
+        className: "min-w-[150px]",
       },
       {
         header: "الحالة",
@@ -239,6 +244,7 @@ export default function SalesContent() {
             </Badge>
           );
         },
+        className: "min-w-[120px]",
       },
       {
         header: "الاجراءات",
@@ -252,6 +258,7 @@ export default function SalesContent() {
             </a>
           </Button>
         ),
+        className: "min-w-[120px]",
       },
     ],
     [handleCopyToClipboard, calculateCommission]
@@ -280,7 +287,10 @@ export default function SalesContent() {
                   .reduce((obj, key) => obj?.[key], sale)
               : sale[column.accessor];
             return (
-              <TableCell key={`${sale.id}-${column.accessor}`}>
+              <TableCell
+                key={`${sale.id}-${column.accessor}`}
+                className={column.className}
+              >
                 {column.customRender(value)}
               </TableCell>
             );
@@ -333,7 +343,7 @@ export default function SalesContent() {
       <div className="space-y-6 animate-fade-in">
         <Card className="border-border/50 shadow-sm">
           <CardHeader className="pb-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
+            <div className="flex flex-col gap-4">
               <div>
                 <CardTitle className="text-xl font-semibold">
                   المبيعات الحديثة
@@ -342,8 +352,8 @@ export default function SalesContent() {
                   أحدث مشتريات الدورات والمعاملات
                 </CardDescription>
               </div>
-              <div className="flex flex-col gap-3 w-full sm:w-auto sm:flex-row">
-                <div className="relative w-full sm:w-64">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="relative col-span-1 sm:col-span-2 lg:col-span-1">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="text"
@@ -358,7 +368,7 @@ export default function SalesContent() {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="w-full sm:w-40 justify-start text-left font-normal"
+                      className="w-full justify-start text-left font-normal"
                       disabled={loading}
                     >
                       {dateFilter
@@ -380,7 +390,7 @@ export default function SalesContent() {
                   onValueChange={handleStatusFilterChange}
                   disabled={loading}
                 >
-                  <SelectTrigger className="w-full sm:w-40">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="حالة البيع" />
                   </SelectTrigger>
                   <SelectContent>
@@ -395,79 +405,24 @@ export default function SalesContent() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="hidden md:block rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {columns.map((column) => (
-                      <TableHead className="text-start" key={column.accessor}>
-                        {column.header}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>{tableBodyContent}</TableBody>
-              </Table>
-            </div>
-
-            <div className="md:hidden space-y-4">
-              {loading ? (
-                <div className="rounded-md border p-4">
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                    <p>جاري تحميل البيانات...</p>
-                  </div>
-                </div>
-              ) : sales?.length > 0 ? (
-                sales.map((sale) => (
-                  <Card
-                    key={sale.id}
-                    className="hover:shadow-md transition-shadow"
-                  >
-                    <CardContent className="p-4">
-                      {columns.map((column) => {
-                        const value = column.accessor.includes(".")
-                          ? column.accessor
-                              .split(".")
-                              .reduce((obj, key) => obj?.[key], sale)
-                          : sale[column.accessor];
-                        return (
-                          <div
-                            key={`${sale.id}-${column.accessor}`}
-                            className="grid grid-cols-2 gap-2 py-2"
-                          >
-                            <div className="font-medium text-sm text-muted-foreground">
-                              {column.header}
-                            </div>
-                            <div className="text-sm">
-                              {column.customRender(value)}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <div className="rounded-md border p-4 h-24 flex items-center justify-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <p>لا توجد بيانات متاحة</p>
-                    {(searchQuery || statusFilter !== "all" || dateFilter) && (
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          setSearchQuery("");
-                          setStatusFilter("all");
-                          setDateFilter(null);
-                          setCurrentPage(1);
-                        }}
-                      >
-                        إعادة تعيين الفلتر
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              )}
+            <div className="rounded-md border overflow-x-auto">
+              <div className="min-w-[800px] md:min-w-full">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {columns.map((column) => (
+                        <TableHead
+                          className={`text-start ${column.className}`}
+                          key={column.accessor}
+                        >
+                          {column.header}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>{tableBodyContent}</TableBody>
+                </Table>
+              </div>
             </div>
 
             {totalPages > 1 && (
@@ -500,7 +455,7 @@ export default function SalesContent() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap justify-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -517,13 +472,15 @@ export default function SalesContent() {
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm">
-                    {loading ? (
-                      <Skeleton className="h-4 w-16" />
-                    ) : (
-                      `الصفحة ${currentPage} من ${totalPages}`
-                    )}
-                  </span>
+                  <div className="flex items-center justify-center min-w-[120px]">
+                    <span className="text-sm">
+                      {loading ? (
+                        <Skeleton className="h-4 w-16" />
+                      ) : (
+                        `الصفحة ${currentPage} من ${totalPages}`
+                      )}
+                    </span>
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"

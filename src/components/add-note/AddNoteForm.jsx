@@ -384,7 +384,7 @@ const AddNoteForm = ({ universities, userNotesCount, edit }) => {
                   value={formik.values.contactMethod}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  placeholder="مثال: 05xxxxxxx أو example@mail.com"
+                  placeholder="example@gmail.com | 0500000000"
                   disabled={!isEditMode && !canAddMoreNotes}
                 />
                 {formik.touched.contactMethod &&

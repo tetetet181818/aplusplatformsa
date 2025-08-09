@@ -138,34 +138,32 @@ export const useSalesStore = create((set, get) => ({
   },
 
   getSalesStatistics: async () => {
-    try {
-      set({ loading: true, error: null });
+  try {
+    set({ loading: true, error: null });
 
-      const [
-        totalAmountResult,
-        growthRateResult,
-        monthlySalesResult,
-        recentSalesResult,
-      ] = await Promise.all([
-        get().getTotalSalesAmount(),
-        get().getMonthlyGrowthRate(),
-        get().getMonthlySales(),
-        get().getSales(1, 5),
-      ]);
+    const [
+      totalAmountResult,
+      growthRateResult,
+      monthlySalesResult
+    ] = await Promise.all([
+      get().getTotalSalesAmount(),
+      get().getMonthlyGrowthRate(),
+      get().getMonthlySales(),
+    ]);
 
-      set({ loading: false });
+    set({ loading: false });
 
-      return {
-        totalAmount: totalAmountResult?.totalAmount || 0,
-        platformProfit: totalAmountResult?.platformProfit || 0,
-        growthRate: growthRateResult || 0,
-        monthlySales: monthlySalesResult || [],
-        recentSales: recentSalesResult?.data || [],
-      };
-    } catch (error) {
-      return get().handleError(error, "فشل في جلب إحصائيات المبيعات");
-    }
-  },
+    return {
+      totalAmount: totalAmountResult?.totalAmount || 0,
+      platformProfit: totalAmountResult?.platformProfit || 0,
+      growthRate: growthRateResult || 0,
+      monthlySales: monthlySalesResult || [],
+    };
+  } catch (error) {
+    return get().handleError(error, "فشل في جلب إحصائيات المبيعات");
+  }
+},
+
 
   getUserSales: async (userId) => {
     try {

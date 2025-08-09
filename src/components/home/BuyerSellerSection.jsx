@@ -71,6 +71,10 @@ const BuyerSellerSection = () => {
                 icon={<Bookmark className="h-5 w-5" />}
                 text="محفوظات 'مشترياتي' - يمكنك تحميلها في أي وقت"
               />
+              <FeatureItem
+                icon={<Wallet className="h-5 w-5" />}
+                text="سهولة التواصل مع البائع عبر البريد أو الجوال (إن وُفر)"
+              />
             </ul>
           </Card>
 

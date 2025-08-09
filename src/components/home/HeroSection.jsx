@@ -32,7 +32,7 @@ const HeroSection = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
         >
-          <p className="text-white mb-4">هل أنت طالب وتحب تبسيط المقررات؟</p>
+          <p className="text-white mb-4">وفّر وقتك، وابدأ رحلتك الأكاديمية الذكية</p>
 
           <ul className="space-y-3 text-white/90 text-sm md:text-base">
             <li className="flex items-start gap-2">

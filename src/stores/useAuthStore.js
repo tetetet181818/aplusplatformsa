@@ -361,11 +361,12 @@ export const useAuthStore = create((set, get) => ({
     }
   },
   getAllUsers: async ({
-    page = 1,
-    itemsPerPage = 10,
-    date = null,
-    university = null,
-  }) => {
+  page = 1,
+  itemsPerPage = 10,
+  date = null,
+  university = null,
+} = {}) => {
+
     try {
       set({ loading: true });
 

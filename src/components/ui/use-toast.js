@@ -90,9 +90,12 @@ export function useToast() {
 
   useEffect(() => {
     return toastStore.subscribe(() => {
-      setState(toastStore.getState());
+      setTimeout(() => {
+        setState(toastStore.getState());
+      }, 0);
     });
   }, []);
+
 
   useEffect(() => {
     const timeouts = state.toasts

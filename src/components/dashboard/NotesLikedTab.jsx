@@ -1,5 +1,6 @@
 "use client";
-import { useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,14 +11,42 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "@/stores/useAuthStore";
 import Image from "next/image";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import { useToast } from "@/components/ui/use-toast";
 
 const NotesLikedTab = () => {
   const router = useRouter();
   const { getNotesLiked, likedListLoading, likedNotes } = useAuthStore();
+  const { toast } = useToast();
+
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   useEffect(() => {
     getNotesLiked();
   }, [getNotesLiked]);
+
+  useEffect(() => {
+    // هذا التحقق يتم مرة واحدة فقط بعد ما البيانات تكون جاهزة
+    if (!likedListLoading && likedNotes && !initialCheckDone) {
+      const storedLikedIds =
+        JSON.parse(localStorage.getItem("liked_notes_ids") || "[]") || [];
+
+      const fetchedIds = likedNotes.map((note) => note.id);
+
+      const missingIds = storedLikedIds.filter(
+        (id) => !fetchedIds.includes(id)
+      );
+
+      if (missingIds.length > 0) {
+        toast({
+          title: "تنبيه",
+          description: "تم حذف بعض الملخصات التي سبق أن أعجبت بها",
+          variant: "destructive",
+        });
+      }
+
+      setInitialCheckDone(true);
+    }
+  }, [likedListLoading, likedNotes, toast, initialCheckDone]);
 
   if (likedListLoading) {
     return <LoadingSpinner message="جاري التحميل..." />;

@@ -27,5 +27,17 @@ export const addNoteSchema = yup.object().shape({
     .required("السنة مطلوبة")
     .min(2000, "السنة يجب أن تكون 2000 أو بعدها")
     .max(new Date().getFullYear() + 5, "السنة يجب أن تكون في المستقبل القريب"),
-  contactMethod: yup.string().required("طريقة التواصل مطلوبة"),
+  contactMethod: yup
+    .string()
+    .required("طريقة التواصل مطلوبة")
+    .test(
+      "is-valid-contact",
+      "أدخل بريد إلكتروني صحيح أو رقم جوال يبدأ بـ 05 ويتكون من 10 أرقام",
+      (value) => {
+        if (!value) return false;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneRegex = /^05\d{8}$/;
+        return emailRegex.test(value) || phoneRegex.test(value);
+      }
+    ),
 });

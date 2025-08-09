@@ -101,7 +101,8 @@ const ContactUsPage = () => {
               </div>
               <p className="text-gray-600 dark:text-gray-400 flex items-center">
                 <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
-                يتم الرد خلال 24-48 ساعة
+                نحن نسعى للرد خلال 24 ساعة، وقد يستغرق الرد في بعض الحالات حتى
+                48 ساعة كحد أقصى.
               </p>
             </motion.section>
           </div>

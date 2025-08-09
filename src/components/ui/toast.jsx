@@ -37,24 +37,27 @@ const toastVariants = cva(
   }
 );
 
-const Toast = React.forwardRef(({ className, variant, ...props }, ref) => {
-  return (
-    <ToastPrimitives.Root
-      ref={ref}
-      className={cn(
-        toastVariants({ variant }),
-        "data-[state=open]:animate-in data-[state=closed]:animate-out",
-        "data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)]",
-        "data-[swipe=cancel]:translate-x-0",
-        "data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)]",
-        "data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
-        "data-[state=closed]:slide-out-to-right-full",
-        className
-      )}
-      {...props}
-    />
-  );
-});
+const Toast = React.forwardRef(
+  ({ className, variant, dismiss, ...props }, ref) => {
+    return (
+      <ToastPrimitives.Root
+        ref={ref}
+        className={cn(
+          toastVariants({ variant }),
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)]",
+          "data-[swipe=cancel]:translate-x-0",
+          "data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)]",
+          "data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
+          "data-[state=closed]:slide-out-to-right-full",
+          className
+        )}
+        {...props} 
+      />
+    );
+  }
+);
+
 Toast.displayName = ToastPrimitives.Root.displayName;
 
 const ToastAction = React.forwardRef(({ className, ...props }, ref) => (

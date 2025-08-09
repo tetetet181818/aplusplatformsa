@@ -76,7 +76,7 @@ const FilterPanel = ({
 
     return (
       <>
-        <SelectItem value="">الكل</SelectItem>
+        <SelectItem value="">الكل مش</SelectItem>
         {items?.map((item) => (
           <SelectItem key={item} value={item}>
             {item}
