@@ -9,6 +9,7 @@ const useNoteDetail = () => {
   const router = useRouter();
   const { toast } = useToast();
   const { id } = useParams();
+
   const {
     user: currentUser,
     isAuthenticated,
@@ -26,6 +27,13 @@ const useNoteDetail = () => {
     loading,
     downloadLoading,
   } = useFileStore();
+
+  console.log("getSingleNote:", getSingleNote);
+  console.log("getUserById:", getUserById);
+  console.log("deleteNote:", deleteNote);
+  console.log("downloadNote:", downloadNote);
+
+
 
   const [isPurchaseConfirmOpen, setIsPurchaseConfirmOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);

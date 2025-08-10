@@ -3,6 +3,7 @@ import { create } from "zustand";
 import supabase from "@/utils/Supabase-client.js";
 import { toast } from "@/components/ui/use-toast";
 import axios from "axios";
+import { Link, Star } from "lucide-react";
 
 const DEFAULT_IMAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_DEFAULT_COVER;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -473,8 +474,8 @@ export const useFileStore = create((set, get) => ({
       await supabase.from("notifications").insert([
         {
           user_id: userId,
-          title: "تم شراء ملخص",
-          body: `تم شراء ملخص "${currentFile.title}" بنجاح , رقم الفاتورة: ${invoice_id}, `,
+          title: "تم شراء الملخص  بنجاح",
+          body: `تم شراء الملخص  بنجاح"${currentFile.title}" بنجاح , رقم الطلب: ${invoice_id}, ${<CircleDollarSign />}, ${<Link href="">عرض الملخص</Link>} `,
           type: "purchase",
         },
         {
@@ -537,8 +538,8 @@ export const useFileStore = create((set, get) => ({
 
       await supabase.from("notifications").insert({
         user_id: reviewData.userId,
-        title: "تمت إضافة تقييم",
-        body: "تمت إضافة تقييمك للملخص بنجاح",
+        title: "شكرًا لتقييمك! تم تسجيل تقييمك لهذا الملخص.",
+        body: `شكرًا لتقييمك! تم تسجيل تقييمك لهذا الملخص. ${<Star />} ${<Link href=""> تفاصيل التقييم </Link>}`,
         type: "review",
       });
 

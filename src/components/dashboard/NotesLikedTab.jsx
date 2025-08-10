@@ -25,7 +25,6 @@ const NotesLikedTab = () => {
   }, [getNotesLiked]);
 
   useEffect(() => {
-    // هذا التحقق يتم مرة واحدة فقط بعد ما البيانات تكون جاهزة
     if (!likedListLoading && likedNotes && !initialCheckDone) {
       const storedLikedIds =
         JSON.parse(localStorage.getItem("liked_notes_ids") || "[]") || [];

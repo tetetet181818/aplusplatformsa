@@ -18,6 +18,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Image from "next/image";
@@ -189,68 +196,52 @@ const EarningsTab = ({ currentUser, getSellerNotes }) => {
               </div>
             </div>
 
-            <div className="pt-3 border-t">
-              <div className="flex justify-between items-center">
-                <p className="font-medium">صافي الأرباح:</p>
-                <p className="text-xl font-bold text-primary">
-                  {currentNetEarnings.toFixed(2)} ريال
-                </p>
-              </div>
+            <div className="flex items-center gap-2">
+              <p className="font-medium">صافي الأرباح:</p>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>يتم خصم 15% رسوم من إجمالي الأرباح كرسوم خدمة المنصة</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
-            {sellerStats.length > 0 && (
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="sales-details">
-                  <AccordionTrigger className="hover:no-underline py-3">
-                    <div className="flex items-center gap-2 text-sm font-medium">
-                      تفاصيل مبيعات الملخصات
-                      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <ScrollArea className="h-72 pr-3">
-                      <div className="space-y-3">
-                        {sellerStats.map((note) => (
-                          <motion.div
-                            key={note.id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
-                            className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:shadow-sm"
-                          >
-                            <div className="relative h-14 w-14 flex-shrink-0">
-                              <Image
-                                src={note.cover_url}
-                                alt={note.title}
-                                fill
-                                className="rounded-md object-cover"
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-sm truncate">
-                                {note.title}
-                              </h4>
-                              <p className="text-xs text-muted-foreground">
-                                {note.downloads} تحميلات |{" "}
-                                {note.price.toFixed(2)} ريال
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-semibold text-sm">
-                                {calculateTotalPrice(
-                                  note.price,
-                                  note.downloads
-                                ).toFixed(2)}{" "}
-                                ريال
-                              </p>
-                            </div>
-                          </motion.div>
+            {currentUser?.withdrawalsHistory?.length > 0 && (
+              <Card className="shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold">
+                    سجل التحويلات البنكية
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm text-left border">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="px-4 py-2 border">الحالة</th>
+                          <th className="px-4 py-2 border">التاريخ</th>
+                          <th className="px-4 py-2 border">رقم العملية</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentUser.withdrawalsHistory.map((w, index) => (
+                          <tr key={index} className="hover:bg-muted/50">
+                            <td className="px-4 py-2 border">{w.status}</td>
+                            <td className="px-4 py-2 border">{w.date}</td>
+                            <td className="px-4 py-2 border">
+                              {w.transactionId}
+                            </td>
+                          </tr>
                         ))}
-                      </div>
-                    </ScrollArea>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </CardContent>
         </Card>

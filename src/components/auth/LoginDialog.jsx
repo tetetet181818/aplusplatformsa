@@ -29,7 +29,10 @@ const LoginDialog = ({ isOpen, onClose, onSwitchToRegister }) => {
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       const user = await login(values);
       if (user) {
-        toast({ title: "تم تسجيل الدخول بنجاح!", variant: "success" });
+        toast({
+          title: "مرحبًا من جديد، alaa adel! تم تسجيل دخولك بنجاح.",
+          variant: "success",
+        });
         resetForm();
         onClose();
       }

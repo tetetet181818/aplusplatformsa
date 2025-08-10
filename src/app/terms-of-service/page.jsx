@@ -1,3 +1,4 @@
+"use client";
 import TermsOfServicePage from "@/pages/TermsOfServicePage";
 import React from "react";
 

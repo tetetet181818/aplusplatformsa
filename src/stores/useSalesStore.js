@@ -47,9 +47,13 @@ export const useSalesStore = create((set, get) => ({
         .order("created_at", { ascending: false });
 
       if (filters.search) {
-        query = query.or(
-          `title.ilike.%${filters.search}%,users.full_name.ilike.%${filters.search}%`
-        );
+        query = query.or(`full_name.ilike.%${filters.search}%`, {
+          foreignTable: "users",
+        });
+
+
+
+
       }
 
       if (filters.dateFrom && filters.dateTo) {
@@ -64,9 +68,10 @@ export const useSalesStore = create((set, get) => ({
 
       const { data, count, error } = await query.range(from, to);
       if (error) {
-        set({ loading: false, error: error.message });
-        throw error;
+        set({ loading: false, error: error.message || "خطأ غير معروف" });
+        throw new Error(error.message || "خطأ غير معروف");
       }
+
 
       set({
         sales: data || [],

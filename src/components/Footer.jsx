@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Award } from "lucide-react";
 import PaymentMethodsSection from "@/components/home/PaymentMethodsSection";
@@ -12,6 +14,7 @@ const Footer = () => {
       title: "روابط سريعة",
       links: [
         { href: "/", text: "الرئيسية" },
+        { href: "/FAQPage", text: "الاسئله الشائعه" },
         { href: "/notes", text: "تصفح الملخصات" },
         { href: "/add-note", text: "إضافة ملخص" },
         { href: "/profile", text: "الملف الشخصي" },

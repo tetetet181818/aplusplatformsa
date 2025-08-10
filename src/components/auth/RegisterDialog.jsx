@@ -14,7 +14,7 @@ import { useFormik } from "formik";
 import { registerSchema } from "@/utils/validation/authValidation";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { toast } from "@/components/ui/use-toast";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Building2,
   Eye,
@@ -67,14 +67,25 @@ const RegisterDialog = ({ isOpen, onClose, onSwitchToLogin }) => {
     },
   });
 
-  if (error) {
-    toast({
-      title: "فشل التسجيل",
-      description: error,
-      variant: "destructive",
-    });
-    clearError();
-  }
+  
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "فشل التسجيل",
+        description: error,
+        variant: "destructive",
+      });
+
+      const timer = setTimeout(() => {
+        clearError();
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [error, clearError]);
+
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
