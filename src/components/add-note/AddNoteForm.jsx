@@ -26,7 +26,7 @@ import {
   FileText,
   AlertCircle,
   ImageUp,
-  Checkbox,
+  // Checkbox,
   Loader,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -38,7 +38,7 @@ import {
 } from "@/constants/index";
 import { useFileStore } from "@/stores/useFileStore";
 import { addNoteSchema } from "@/utils/validation/fileValidation";
-
+import { Checkbox } from "@/components/ui/checkbox";
 const AddNoteForm = ({ universities, userNotesCount, edit }) => {
   const router = useRouter();
   const { createNote, updateNote, getSingleNote, loading } = useFileStore();

@@ -6,27 +6,16 @@ import FeaturesSection from "@/components/home/FeaturesSection";
 import CallToActionSection from "@/components/home/CallToActionSection";
 import BuyerSellerSection from "@/components/home/BuyerSellerSection";
 
+export const metadata = {
+  title: "منصة أ+ | ملخصات دراسية جامعية",
+  description:
+    "منصة أ+ للدراسة الجامعية - احصل على أفضل الملخصات الدراسية من طلاب الجامعات",
+  keywords: ["الملخصات الدراسيه", "الدراسه"],
+};
+
 const HomePage = () => {
   return (
     <>
-      <Head>
-        <title>منصة أ+ | ملخصات دراسية جامعية</title>
-        <meta
-          name="description"
-          content="منصة أ+ للدراسة الجامعية - احصل على أفضل الملخصات الدراسية من طلاب الجامعات"
-        />
-        <meta
-          name="keywords"
-          content="ملخصات دراسية, جامعة, دراسة, مواد جامعية, ملخصات, تعليم"
-        />
-        <meta property="og:title" content="منصة أ+ | ملخصات دراسية جامعية" />
-        <meta
-          property="og:description"
-          content="منصة أ+ للدراسة الجامعية - احصل على أفضل الملخصات الدراسية من طلاب الجامعات"
-        />
-        <meta property="og:type" content="website" />
-      </Head>
-
       <motion.main
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

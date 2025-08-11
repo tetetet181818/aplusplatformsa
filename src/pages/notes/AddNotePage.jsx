@@ -8,7 +8,7 @@ import AddNoteLoginPrompt from "@/components/add-note/AddNoteLoginPrompt";
 import AddNotePageHeader from "@/components/add-note/AddNotePageHeader";
 import { universities } from "@/data/universityData";
 
-const AddNotePage = ({ isAuthenticated }) => {
+const AddNotePage = ({ isAuthenticated, edit }) => {
   const router = useRouter();
   const userNotesCount = 0;
 
@@ -39,6 +39,7 @@ const AddNotePage = ({ isAuthenticated }) => {
             <AddNoteForm
               universities={universities}
               userNotesCount={userNotesCount}
+              edit={edit}
             />
           </motion.section>
 
