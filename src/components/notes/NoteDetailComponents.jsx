@@ -120,7 +120,7 @@ export const NoteImage = ({ src, alt }) => {
 
   return (
     <Card className="shadow-lg overflow-hidden border-gray-200 dark:border-gray-700">
-      <div className="aspect-video bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+      <div className="bg-gray-100 flex items-center justify-center">
         {imageError ? (
           <div className="text-gray-500 flex flex-col items-center">
             <FileText className="h-16 w-16 mb-2" />
@@ -129,7 +129,7 @@ export const NoteImage = ({ src, alt }) => {
         ) : (
           <MyImage
             alt={alt || "صورة الملخص"}
-            className="w-full h-full object-cover"
+            className="mx-auto object-cover"
             src={src}
             onError={handleImageError}
           />
@@ -264,7 +264,7 @@ export const NoteAuthorInfo = ({ authorId, authorName, isOwner }) => {
           <p className="font-semibold text-lg text-gray-800 dark:text-white">
             {authorName || "بائع غير معروف"}
           </p>
-          <Link to={isOwner ? "/profile" : `/seller/${authorId}`}>
+          <Link href={isOwner ? "/profile" : `/seller/${authorId}`}>
             <Button variant="link" className="text-primary p-0 h-auto">
               {isOwner ? "إدارة حسابي" : "عرض ملف البائع"}
             </Button>

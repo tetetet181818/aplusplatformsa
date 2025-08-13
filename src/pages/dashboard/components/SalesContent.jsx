@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import SalesDetailsDialog from "./SalesDetailsDialog";
 
 const statusOptions = [
   { value: "all", label: "جميع الحالات" },
@@ -53,7 +54,7 @@ const statusOptions = [
   { value: "failed", label: "فشل" },
 ];
 
-const commissionRate = 0.15; // 15% commission
+const commissionRate = 0.15;
 
 export default function SalesContent() {
   const { toast } = useToast();
@@ -69,13 +70,16 @@ export default function SalesContent() {
     clearError,
     setCurrentPage,
     setItemsPerPage,
+    getDetailsOfSales,
+    selectSalesDetails,
   } = useSalesStore();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState(null);
   const [searchTimeout, setSearchTimeout] = useState(null);
-
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [selectedSalesId, setSelectedSalesId] = useState(null);
   const totalPages = useMemo(
     () => Math.ceil(totalSales / itemsPerPage),
     [totalSales, itemsPerPage]
@@ -251,11 +255,18 @@ export default function SalesContent() {
         accessor: "id",
         label: "الاجراءات",
         customRender: (id) => (
-          <Button variant="ghost" size="sm" asChild>
-            <a href={`/notes/${id}`} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              التفاصيل
-            </a>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setShowDetailsDialog(true);
+              console.log(sales?.id);
+              setSelectedSalesId(sales?.id);
+              getDetailsOfSales({ salesId: sales?.id });
+            }}
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            التفاصيل
           </Button>
         ),
         className: "min-w-[120px]",
@@ -263,6 +274,90 @@ export default function SalesContent() {
     ],
     [handleCopyToClipboard, calculateCommission]
   );
+
+  const renderMobileCard = (sale) => {
+    return (
+      <Card
+        key={sale.id}
+        className="mb-4"
+        onChange={() => setSelectedSalesId(sale?.id)}
+      >
+        <CardContent className="p-4 space-y-3">
+          <div className="flex justify-between">
+            <span className="font-medium">الدورة:</span>
+            <span>{sale.files?.title || "غير محدد"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-medium">الطالب:</span>
+            <span>{sale.users?.full_name || "غير محدد"}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="font-medium">رقم العملية:</span>
+            <div className="flex items-center gap-2">
+              {sale.invoice_id || "غير متوفر"}
+              {sale.invoice_id && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => handleCopyToClipboard(sale.invoice_id)}
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-medium">المبلغ:</span>
+            <div className="flex flex-col items-end">
+              <span>${(sale.amount || 0).toLocaleString()} ر.س</span>
+              <span className="text-xs text-muted-foreground">
+                العمولة: {calculateCommission(sale.amount)} ر.س
+              </span>
+            </div>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-medium">التاريخ:</span>
+            <span>
+              {sale.created_at
+                ? formatArabicDate(sale.created_at, { hijri: true })
+                : "غير محدد"}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="font-medium">الحالة:</span>
+            <Badge
+              variant={
+                {
+                  completed: "default",
+                  pending: "secondary",
+                  failed: "destructive",
+                }[sale.status] || "secondary"
+              }
+            >
+              {{
+                completed: "مكتمل",
+                pending: "قيد الانتظار",
+                failed: "فشل",
+              }[sale.status] || sale.status}
+            </Badge>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full mt-2"
+            onClick={() => {
+              setShowDetailsDialog(true);
+              getDetailsOfSales({ salesId: sale.id });
+            }}
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            التفاصيل
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  };
 
   const tableBodyContent = useMemo(() => {
     if (loading)
@@ -361,7 +456,6 @@ export default function SalesContent() {
                     className="w-full pl-9"
                     value={searchQuery}
                     onChange={handleSearchInputChange}
-                    disabled={loading}
                   />
                 </div>
                 <Popover>
@@ -405,23 +499,64 @@ export default function SalesContent() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border overflow-x-auto">
-              <div className="min-w-[800px] md:min-w-full">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {columns.map((column) => (
-                        <TableHead
-                          className={`text-start ${column.className}`}
-                          key={column.accessor}
-                        >
-                          {column.header}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>{tableBodyContent}</TableBody>
-                </Table>
+            <div className="block md:hidden">
+              {loading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i}>
+                      <CardContent className="p-4 space-y-3">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-8 w-full mt-2" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : sales?.length > 0 ? (
+                <div>{sales.map(renderMobileCard)}</div>
+              ) : (
+                <div className="flex flex-col items-center gap-4 p-4">
+                  <p>لا توجد بيانات متاحة</p>
+                  {(searchQuery || statusFilter !== "all" || dateFilter) && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setStatusFilter("all");
+                        setDateFilter(null);
+                        setCurrentPage(1);
+                      }}
+                    >
+                      إعادة تعيين الفلتر
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="hidden md:block">
+              <div className="rounded-md border overflow-x-auto">
+                <div className="min-w-[800px] md:min-w-full">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        {columns.map((column) => (
+                          <TableHead
+                            className={`text-start ${column.className}`}
+                            key={column.accessor}
+                          >
+                            {column.header}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>{tableBodyContent}</TableBody>
+                  </Table>
+                </div>
               </div>
             </div>
 
@@ -503,6 +638,11 @@ export default function SalesContent() {
           </CardContent>
         </Card>
       </div>
+      <SalesDetailsDialog
+        open={showDetailsDialog}
+        onClose={() => setShowDetailsDialog(false)}
+        selectSalesDetails={selectSalesDetails}
+      />
     </>
   );
 }

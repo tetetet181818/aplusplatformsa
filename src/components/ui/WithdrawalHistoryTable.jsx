@@ -53,51 +53,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
-const statusVariantMap = {
-  pending: "default",
-  accepted: "success",
-  rejected: "destructive",
-  completed: "completed",
-};
-
-const statusLabelMap = {
-  pending: "بانتظار التنفيذ",
-  accepted: "تمت الموافقة",
-  rejected: "مرفوض",
-  completed: "مكتمل",
-};
-
-const WithdrawalStatsCard = ({ title, value }) => (
-  <Card className="flex-1 text-center transition-all hover:shadow-md">
-    <CardContent className="p-4">
-      <h3 className="text-primary text-lg font-semibold">{title}</h3>
-      <p className="font-bold text-2xl mt-3 animate-fade-in">{value}</p>
-    </CardContent>
-  </Card>
-);
-
-const MobileWithdrawalCard = ({ withdrawal, columns, onAction }) => (
-  <Card key={withdrawal.id} className="border-muted/30 mb-4 animate-fade-in">
-    <CardContent className="p-4 space-y-3">
-      {columns
-        .filter((col) => col.accessor)
-        .map((column) => (
-          <div key={column.accessor} className="flex justify-between">
-            <span className="font-medium">{column.label}:</span>
-            <span className="text-muted-foreground">
-              {column.customRender
-                ? column.customRender(withdrawal[column.accessor], withdrawal)
-                : withdrawal[column.accessor] || "غير محدد"}
-            </span>
-          </div>
-        ))}
-      <div className="pt-2">
-        {columns.find((col) => !col.accessor)?.customRender(null, withdrawal)}
-      </div>
-    </CardContent>
-  </Card>
-);
+import WithdrawalStatsCard from "../Withdrawals/WithdrawalStatsCard";
+import MobileWithdrawalCard from "../Withdrawals/MobileWithdrawalCard";
+import { statusLabelMap, statusVariantMap } from "@/constants/index";
 
 export default function WithdrawalHistoryTable() {
   const {
@@ -116,6 +74,7 @@ export default function WithdrawalHistoryTable() {
     deleteWithdrawalOrder,
     updateWithdrawalNotes,
     completeWithdrawalOrder,
+    addRoutingDetails,
   } = useWithdrawalsStore();
 
   const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
@@ -134,19 +93,17 @@ export default function WithdrawalHistoryTable() {
         admin_notes: adminNotes || "لا توجد ملاحظات",
       };
 
-      // First update the notes
       await updateWithdrawalNotes(payload);
 
-      // Then perform the action
       if (actionType === "accept") {
         await acceptedWithdrawalOrder(payload);
       } else if (actionType === "reject") {
         await rejectedWithdrawalOrder(payload);
       } else if (actionType === "complete") {
-        await completeWithdrawalOrder({
-          ...payload,
-          transfer_number: transferNumber,
-          transfer_date: transferDate
+        await addRoutingDetails({
+          withdrawalId: selectedWithdrawal?.id,
+          routing_number: transferNumber,
+          routing_date: transferDate
             ? format(transferDate, "yyyy-MM-dd")
             : null,
         });
@@ -210,6 +167,19 @@ export default function WithdrawalHistoryTable() {
       label: "ملاحظات",
       customRender: (notes) => notes || "لا توجد ملاحظات",
     },
+    {
+      header: "رقم التحويل",
+      accessor: "routing_number",
+      label: "رقم التحويل",
+      customRender: (routing_number) => routing_number || "لا توجد رقم تحويل",
+    },
+    {
+      header: "تاريخ التحويل",
+      accessor: "routing_date",
+      label: "تاريخ التحويل",
+      customRender: (routing_date) => routing_date || "لا توجد تاريخ تحويل",
+    },
+    ,
     {
       header: "الإجراءات",
       customRender: (_, withdrawal) => (
@@ -313,13 +283,14 @@ export default function WithdrawalHistoryTable() {
               </DialogDescription>
             </DialogHeader>
 
-            <Textarea
-              placeholder="أدخل ملاحظاتك هنا..."
-              value={adminNotes}
-              onChange={(e) => setAdminNotes(e.target.value)}
-              className="min-h-[120px]"
-            />
-
+            {actionType === "accept" && (
+              <Textarea
+                placeholder="أدخل ملاحظاتك هنا..."
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+                className="min-h-[120px]"
+              />
+            )}
             {actionType === "complete" && (
               <div className="space-y-4">
                 <Input
@@ -371,7 +342,7 @@ export default function WithdrawalHistoryTable() {
                 }
                 variant={
                   actionType === "accept"
-                    ? "default"
+                    ? "success"
                     : actionType === "complete"
                     ? "success"
                     : "destructive"
@@ -455,10 +426,10 @@ export default function WithdrawalHistoryTable() {
                           >
                             {column.customRender
                               ? column.customRender(
-                                  withdrawal[column.accessor],
+                                  withdrawal[column?.accessor],
                                   withdrawal
                                 )
-                              : withdrawal[column.accessor] || "غير محدد"}
+                              : withdrawal[column?.accessor] || "غير محدد"}
                           </TableCell>
                         ))}
                       </TableRow>

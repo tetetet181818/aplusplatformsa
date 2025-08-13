@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Eye,
@@ -61,6 +61,7 @@ export default function StudentsContent() {
   const [showUser, setShowUser] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchMode, setSearchMode] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const {
     getAllUsers,
@@ -124,29 +125,17 @@ export default function StudentsContent() {
   ];
 
   useEffect(() => {
-    fetchUsers(currentPage);
-  }, []);
-
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
+    if (!searchQuery.trim()) {
       setSearchMode(false);
       fetchUsers(currentPage);
-    } else {
-      setSearchMode(true);
-      handleSearch(searchQuery, currentPage);
     }
-  }, [currentPage, searchQuery, dateFilter, universityFilter]);
+  }, [currentPage, dateFilter, universityFilter]);
 
   const fetchUsers = async (page) => {
     try {
       let params = { page, itemsPerPage };
-      if (dateFilter) {
-        params.date = format(dateFilter, "yyyy-MM-dd");
-      }
-      if (universityFilter) {
-        params.university = universityFilter;
-      }
-
+      if (dateFilter) params.date = format(dateFilter, "yyyy-MM-dd");
+      if (universityFilter) params.university = universityFilter;
       const result = await getAllUsers(params);
       if (result) {
         setUsers(result.data);
@@ -157,35 +146,49 @@ export default function StudentsContent() {
     }
   };
 
-  const handleSearch = async (query, page = 1) => {
-    if (query.trim() === "") {
-      setSearchMode(false);
-      fetchUsers(page);
-      return;
-    }
-
-    try {
-      const result = await searchAboutUser({
-        query,
-        page,
-        itemsPerPage,
-        ...(dateFilter && { date: format(dateFilter, "yyyy-MM-dd") }),
-        ...(universityFilter && { university: universityFilter }),
-      });
-
-      if (result) {
-        setUsers(result.data);
-        setTotalItems(result.totalItems);
-        setCurrentPage(page);
+  const handleSearch = useCallback(
+    async (query, page = 1) => {
+      if (!query.trim()) {
+        setSearchMode(false);
+        fetchUsers(page);
+        return;
       }
-    } catch (err) {
-      console.error("Search error:", err);
-    }
-  };
+      setIsSearching(true);
+      try {
+        const result = await searchAboutUser({
+          query,
+          page,
+          itemsPerPage,
+          ...(dateFilter && { date: format(dateFilter, "yyyy-MM-dd") }),
+          ...(universityFilter && { university: universityFilter }),
+        });
+        if (result) {
+          setUsers(result.data);
+          setTotalItems(result.totalItems);
+          setCurrentPage(page);
+          setSearchMode(true);
+        }
+      } catch (err) {
+        console.error("Search error:", err);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [dateFilter, universityFilter]
+  );
+
+  const debounceSearch = useCallback(() => {
+    let timer;
+    return (value) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        handleSearch(value, 1);
+      }, 600);
+    };
+  }, [handleSearch])();
 
   const handleDeleteUser = async (id) => {
     if (!confirm("هل أنت متأكد من حذف هذا الطالب؟")) return;
-
     try {
       await deleteUserById({ id });
       fetchUsers(currentPage);
@@ -196,12 +199,15 @@ export default function StudentsContent() {
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
+    if (searchMode) handleSearch(searchQuery, newPage);
   };
 
   const clearFilters = () => {
     setDateFilter(null);
     setUniversityFilter(null);
     setCurrentPage(1);
+    if (!searchQuery.trim()) fetchUsers(1);
+    else handleSearch(searchQuery, 1);
   };
 
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -260,15 +266,10 @@ export default function StudentsContent() {
                     className="pl-10 pr-3 py-2 rounded-md text-sm w-full"
                     value={searchQuery}
                     onChange={(e) => {
-                      const query = e.target.value;
-                      setSearchQuery(query);
-                      const timer = setTimeout(
-                        () => handleSearch(query, 1),
-                        500
-                      );
-                      return () => clearTimeout(timer);
+                      const val = e.target.value;
+                      setSearchQuery(val);
+                      debounceSearch(val);
                     }}
-                    disabled={loading}
                   />
                 </div>
 
@@ -334,7 +335,7 @@ export default function StudentsContent() {
           <CardContent>
             {/* Mobile View */}
             <div className="block md:hidden space-y-4">
-              {loading ? (
+              {loading || isSearching ? (
                 Array.from({ length: 5 }).map((_, index) => (
                   <Card key={index} className="animate-pulse">
                     <CardContent className="pt-4 space-y-3">
@@ -410,7 +411,7 @@ export default function StudentsContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {loading ? (
+                  {loading || isSearching ? (
                     Array.from({ length: 5 }).map((_, index) => (
                       <TableRow key={index}>
                         {columns.map((_, colIndex) => (
@@ -463,11 +464,10 @@ export default function StudentsContent() {
               </Table>
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
                 <div className="text-sm text-muted-foreground">
-                  {loading ? (
+                  {loading || isSearching ? (
                     <Skeleton className="h-4 w-48" />
                   ) : (
                     `عرض ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(
@@ -480,13 +480,13 @@ export default function StudentsContent() {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={currentPage === 1 || loading}
+                    disabled={currentPage === 1 || loading || isSearching}
                     onClick={() => handlePageChange(currentPage - 1)}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                   <span className="text-sm">
-                    {loading ? (
+                    {loading || isSearching ? (
                       <Skeleton className="h-4 w-16" />
                     ) : (
                       `الصفحة ${currentPage} من ${totalPages}`
@@ -495,7 +495,9 @@ export default function StudentsContent() {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={currentPage >= totalPages || loading}
+                    disabled={
+                      currentPage >= totalPages || loading || isSearching
+                    }
                     onClick={() => handlePageChange(currentPage + 1)}
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -507,7 +509,6 @@ export default function StudentsContent() {
         </Card>
       </div>
 
-      {/* Student Details Dialog */}
       {showUser && (
         <GetSingleStudentDialog
           open={showUser}

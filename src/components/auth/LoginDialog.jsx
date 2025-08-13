@@ -57,11 +57,6 @@ const LoginDialog = ({ isOpen, onClose, onSwitchToRegister }) => {
     }
   }, [error]);
 
-
-
-
-  
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
@@ -71,7 +66,6 @@ const LoginDialog = ({ isOpen, onClose, onSwitchToRegister }) => {
             مرحبا بعودتك قم بتسجيل الدخول للوصول للصفحة الرئيسية
           </DialogDescription>
         </DialogHeader>
-
 
         <p className="text-center text-sm text-muted-foreground mb-2">
           سجّل دخولك بواسطة Google
@@ -94,6 +88,7 @@ const LoginDialog = ({ isOpen, onClose, onSwitchToRegister }) => {
                   value={formik.values.email}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
+                  placeholder="اكتب البريد الإلكتروني هنا"
                 />
               </div>
               {formik.touched.email && formik.errors.email && (
@@ -110,7 +105,7 @@ const LoginDialog = ({ isOpen, onClose, onSwitchToRegister }) => {
                 <Input
                   type={showPassword ? "text" : "password"}
                   className="pr-10"
-                  placeholder="**********"
+                  placeholder="اكتب كلمة المرور هنا"
                   id="password"
                   name="password"
                   onChange={formik.handleChange}

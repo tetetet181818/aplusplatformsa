@@ -22,9 +22,9 @@ export default function Dashboard() {
   const {
     getFilesMonthlyGrowth,
     growthRate: growthRateFiles,
-    totalFiles,
+    totalNotes,
+    getTotalNotes,
   } = useFileStore();
-
   const {
     getAllUsers,
     users,
@@ -39,8 +39,8 @@ export default function Dashboard() {
     totalAmount,
     getTotalSalesAmount,
     sales,
+    getSales,
   } = useSalesStore();
-
   const newStudents = useMemo(() => {
     if (!users) return [];
     return [...users]
@@ -54,12 +54,16 @@ export default function Dashboard() {
     getFilesMonthlyGrowth();
     getUsersMonthlyGrowth();
     getAllUsers();
+    getTotalNotes();
+    getSales();
   }, [
     getMonthlyGrowthRate,
     getTotalSalesAmount,
     getFilesMonthlyGrowth,
     getUsersMonthlyGrowth,
     getAllUsers,
+    getTotalNotes,
+    getSales,
   ]);
 
   const renderContent = () => {
@@ -67,13 +71,13 @@ export default function Dashboard() {
       dashboard: (
         <DashboardContent
           totalUsers={totalUsers}
-          totalFiles={totalFiles}
+          totalFiles={totalNotes}
           newStudents={newStudents}
           growthRateSales={growthRateSales}
           totalAmount={totalAmount}
           growthRateFiles={growthRateFiles}
           growthRateUsers={growthRateUsers}
-          sales={sales}
+          sales={sales?.slice(0, 5)}
         />
       ),
       students: <StudentsContent />,

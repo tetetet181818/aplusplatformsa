@@ -57,7 +57,7 @@ const ProfilePage = () => {
     const fetchUserNotes = async () => {
       if (isAuthenticated && user?.id) {
         try {
-          const res = await getSellerNotes({ sellerId: user.id });
+          const res = await getSellerNotes({ sellerId: user?.id });
           if (res) setUserNotes(res);
         } catch (error) {
           console.error("Error fetching user notes:", error);

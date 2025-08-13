@@ -1,11 +1,12 @@
+"use client";
 import { useFormik } from "formik";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Mail, Loader2 } from "lucide-react";
-import { useAuthStore } from "../../stores/useAuthStore";
+import { useAuthStore } from "@/stores/useAuthStore";
 import { toast } from "@/components/ui/use-toast";
-import { validationForgetPassword } from "../../utils/validation/authValidation";
+import { validationForgetPassword } from "@/utils/validation/authValidation";
 export default function ForgetPassword() {
   const { loadingForgetPassword, forgetPassword } = useAuthStore(
     (state) => state

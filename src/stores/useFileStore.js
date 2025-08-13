@@ -10,7 +10,8 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY;
 const BUCKET_NAME = "notes";
 const moyasar_key = process.env.MOYASAR_SECRET_KEY;
-const domain = "https://aplusplatformsa.com";
+// const domain = "https://aplusplatformsa.com";
+const domain = "http://localhost:3000";
 export const useFileStore = create((set, get) => ({
   loading: false,
   error: null,
@@ -19,9 +20,22 @@ export const useFileStore = create((set, get) => ({
   notes: [],
   growthRate: 0,
   totalNotes: 0,
-  totalFiles: 0,
   downloadLoading: false,
+  getTotalNotes: async () => {
+    try {
+      set({ loading: true });
+      const { count, error } = await supabase
+        .from("files")
+        .select("*", { count: "exact", head: true });
 
+      if (error) throw error;
+
+      set({ loading: false, totalNotes: count || 0 });
+      return count || 0;
+    } catch (error) {
+      return get().handleError(error, "فشل في جلب عدد المستخدمين");
+    }
+  },
   createNote: async (formData) => {
     const title = formData.get("title");
     const description = formData.get("description");
@@ -172,16 +186,13 @@ export const useFileStore = create((set, get) => ({
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false })
         .range(from, to);
-
       if (error) {
         throw new Error("فشل في جلب الملفات");
       }
-
       set({
         loading: false,
         error: null,
         files: files || [],
-        totalFiles: count || 0,
       });
 
       return {
@@ -315,7 +326,6 @@ export const useFileStore = create((set, get) => ({
         .from("files")
         .select("*")
         .eq("owner_id", sellerId);
-
       if (error) throw error;
 
       set({ loading: false, files: data || [] });
@@ -362,7 +372,7 @@ export const useFileStore = create((set, get) => ({
 
       toast({
         title: "تم حذف الملخص بنجاح",
-        variant: "default",
+        variant: "success",
       });
 
       set({ loading: false });
@@ -475,7 +485,11 @@ export const useFileStore = create((set, get) => ({
         {
           user_id: userId,
           title: "تم شراء الملخص  بنجاح",
-          body: `تم شراء الملخص  بنجاح"${currentFile.title}" بنجاح , رقم الطلب: ${invoice_id}, ${<CircleDollarSign />}, ${<Link href="">عرض الملخص</Link>} `,
+          body: `تم شراء الملخص  بنجاح"${
+            currentFile.title
+          }" بنجاح , رقم الطلب: ${invoice_id}, ${(<CircleDollarSign />)}, ${(
+            <Link href="">عرض الملخص</Link>
+          )} `,
           type: "purchase",
         },
         {
@@ -539,7 +553,9 @@ export const useFileStore = create((set, get) => ({
       await supabase.from("notifications").insert({
         user_id: reviewData.userId,
         title: "شكرًا لتقييمك! تم تسجيل تقييمك لهذا الملخص.",
-        body: `شكرًا لتقييمك! تم تسجيل تقييمك لهذا الملخص. ${<Star />} ${<Link href=""> تفاصيل التقييم </Link>}`,
+        body: `شكرًا لتقييمك! تم تسجيل تقييمك لهذا الملخص. ${(<Star />)} ${(
+          <Link href=""> تفاصيل التقييم </Link>
+        )}`,
         type: "review",
       });
 
@@ -643,30 +659,6 @@ export const useFileStore = create((set, get) => ({
       console.error("Error fetching notes:", error);
       set({ loading: false, error: error.message });
       return null;
-    }
-  },
-
-  getNotesCount: async (filters = {}) => {
-    try {
-      let query = supabase
-        .from("files")
-        .select("*", { count: "exact", head: true });
-
-      if (filters.search) {
-        query = query.or(
-          `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%,subject.ilike.%${filters.search}%`
-        );
-      }
-
-      const { count, error } = await query;
-
-      if (error) throw error;
-
-      set({ totalFiles: count || 0 });
-      return count || 0;
-    } catch (error) {
-      console.error("Error getting notes count:", error);
-      return 0;
     }
   },
 

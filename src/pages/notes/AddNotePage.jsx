@@ -7,7 +7,10 @@ import AddNoteInstructions from "@/components/add-note/AddNoteInstructions";
 import AddNoteLoginPrompt from "@/components/add-note/AddNoteLoginPrompt";
 import AddNotePageHeader from "@/components/add-note/AddNotePageHeader";
 import { universities } from "@/data/universityData";
-
+export const metaData = {
+  title: "إضافة ملخص جديد | منصة أ+",
+  description: "أضف ملخصاتك الدراسية وشاركها مع الطلاب الآخرين",
+};
 const AddNotePage = ({ isAuthenticated, edit }) => {
   const router = useRouter();
   const userNotesCount = 0;
@@ -18,18 +21,10 @@ const AddNotePage = ({ isAuthenticated, edit }) => {
 
   return (
     <>
-      <Head>
-        <title>إضافة ملخص جديد | منصة أ+</title>
-        <meta
-          name="description"
-          content="أضف ملخصاتك الدراسية وشاركها مع الطلاب الآخرين"
-        />
-      </Head>
+      <div className="min-h-screen w-full bg-gradient-to-br from-sky-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4 sm:px-6">
+        <AddNotePageHeader onBack={router.back} edit={edit} />
 
-      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4 sm:px-6">
-        <AddNotePageHeader onBack={router.back} />
-
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
           <motion.section
             className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
             initial={{ opacity: 0, y: 20 }}

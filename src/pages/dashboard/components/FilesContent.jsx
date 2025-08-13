@@ -217,7 +217,6 @@ export default function FilesContent() {
                   className="pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  disabled={loading}
                 />
               </div>
 

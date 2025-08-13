@@ -1,3 +1,9 @@
+import SellerProfilePage from "@/pages/SellerProfilePage";
+
 export default function Seller() {
-  return <div>Seller</div>;
+  return (
+    <div>
+      <SellerProfilePage />
+    </div>
+  );
 }

@@ -11,7 +11,7 @@ export default function NotesSortDropdown({ sortBy, onSortChange }) {
   return (
     <div className="w-full md:w-auto md:min-w-[200px]">
       <Select value={sortBy} onValueChange={onSortChange}>
-        <SelectTrigger className="w-full h-12 text-sm">
+        <SelectTrigger className="w-full  text-sm py-6">
           <ArrowUpDown className="h-4 w-4 ml-2 text-muted-foreground" />
           <SelectValue placeholder="ترتيب حسب..." />
         </SelectTrigger>

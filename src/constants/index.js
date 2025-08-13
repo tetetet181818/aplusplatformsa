@@ -182,3 +182,17 @@ export const faqData = [
     ],
   },
 ];
+
+export const statusLabelMap = {
+  pending: "بانتظار التنفيذ",
+  accepted: "تمت الموافقة",
+  rejected: "مرفوض",
+  completed: "مكتمل",
+};
+
+export const statusVariantMap = {
+  pending: "default",
+  accepted: "success",
+  rejected: "destructive",
+  completed: "completed",
+};

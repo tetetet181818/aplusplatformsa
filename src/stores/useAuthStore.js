@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import supabase from "@/utils/Supabase-client.js";
-import { toast } from "@/components/ui/use-toast";
 
 export const useAuthStore = create((set, get) => ({
   user: null,
@@ -23,13 +22,8 @@ export const useAuthStore = create((set, get) => ({
   notificationsLoading: false,
   unread: [],
   handleError: (error, customMessage = null) => {
-    console.log(error);
+    console.error(error);
     const message = customMessage || error.message || "حدث خطأ غير متوقع";
-    toast({
-      title: "خطأ",
-      description: message,
-      variant: "destructive",
-    });
     set({ loading: false, error: message });
     return null;
   },
@@ -101,11 +95,6 @@ export const useAuthStore = create((set, get) => ({
         type: "auth",
       });
 
-      toast({
-        title: "تم تسجيل الدخول بنجاح",
-        description: `مرحباً ${userData.full_name || ""}`,
-      });
-
       return userData;
     } catch (error) {
       return get().handleError(error, "برجاء التحقق من بيانات الدخول");
@@ -162,7 +151,7 @@ export const useAuthStore = create((set, get) => ({
         try {
           await supabase.auth.admin.deleteUser(authData.user.id);
         } catch (deleteError) {
-          console.log("Failed to cleanup user:", deleteError);
+          console.error("Failed to cleanup user:", deleteError);
         }
         throw profileError;
       }
@@ -179,13 +168,6 @@ export const useAuthStore = create((set, get) => ({
         loading: false,
         isAuthenticated: true,
         error: null,
-      });
-
-      toast({
-        title: "تم التسجيل بنجاح",
-        description:
-          "تم إنشاء حسابك بنجاح. يرجى التحقق من بريدك الإلكتروني لتأكيد الحساب",
-        duration: 5000,
       });
 
       return profileData;
@@ -206,10 +188,6 @@ export const useAuthStore = create((set, get) => ({
         isAuthenticated: false,
         error: null,
       });
-      toast({
-        title: "تم تسجيل الخروج بنجاح",
-        variant: "success",
-      });
       window.location.reload();
     } catch (error) {
       return get().handleError(error);
@@ -228,12 +206,6 @@ export const useAuthStore = create((set, get) => ({
         title: "تم إرسال رابط إعادة التعيين",
         body: "تم إرسال رابط لإعادة تعيين كلمة المرور إلى بريدك الإلكتروني",
         type: "auth",
-      });
-
-      toast({
-        title: "تم إرسال رابط إعادة التعيين",
-        description:
-          "تم إرسال رابط لإعادة تعيين كلمة المرور إلى بريدك الإلكتروني",
       });
 
       return data;
@@ -258,11 +230,6 @@ export const useAuthStore = create((set, get) => ({
         title: "تم تغيير كلمة المرور بنجاح",
         body: "تم تغيير كلمة المرور الخاصة بحسابك بنجاح",
         type: "auth",
-      });
-
-      toast({
-        title: "تم تغيير كلمة المرور بنجاح",
-        variant: "default",
       });
 
       return data;
@@ -328,11 +295,6 @@ export const useAuthStore = create((set, get) => ({
         isAuthenticated: false,
       });
 
-      toast({
-        title: "تم حذف الحساب بنجاح",
-        variant: "default",
-      });
-
       return true;
     } catch (error) {
       return get().handleError(error, "فشل في حذف الحساب");
@@ -361,26 +323,23 @@ export const useAuthStore = create((set, get) => ({
     }
   },
   getAllUsers: async ({
-  page = 1,
-  itemsPerPage = 10,
-  date = null,
-  university = null,
-} = {}) => {
-
+    page = 1,
+    itemsPerPage = 10,
+    date = null,
+    university = null,
+  } = {}) => {
     try {
       set({ loading: true });
 
       const from = (page - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
 
-      // Create base query
       let query = supabase
         .from("users")
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false })
         .range(from, to);
 
-      // Add date filter if provided
       if (date) {
         const startDate = new Date(date);
         startDate.setHours(0, 0, 0, 0);
@@ -393,7 +352,6 @@ export const useAuthStore = create((set, get) => ({
           .lte("created_at", endDate.toISOString());
       }
 
-      // Add university filter if provided
       if (university) {
         query = query.eq("university", university);
       }
@@ -430,7 +388,6 @@ export const useAuthStore = create((set, get) => ({
 
       if (error) throw error;
 
-      // Extract unique universities
       const uniqueUniversities = [
         ...new Set(data.map((item) => item.university)),
       ];
@@ -490,11 +447,6 @@ export const useAuthStore = create((set, get) => ({
         type: "system",
       });
 
-      toast({
-        title: "تم حذف المستخدم بنجاح",
-        variant: "default",
-      });
-
       return true;
     } catch (error) {
       return get().handleError(error, "فشل في حذف المستخدم");
@@ -528,11 +480,6 @@ export const useAuthStore = create((set, get) => ({
       set({
         user: data,
         loading: false,
-      });
-
-      toast({
-        title: "تم تحديث المعلومات بنجاح",
-        variant: "success",
       });
 
       return data;
@@ -626,7 +573,7 @@ export const useAuthStore = create((set, get) => ({
       set({ likeLoading: false });
       return data[0];
     } catch (error) {
-      console.log("Error adding note to favorites:", error);
+      console.error("Error adding note to favorites:", error);
       set({
         likeLoading: false,
         error: error.message || "Failed to add to favorites",
@@ -684,7 +631,7 @@ export const useAuthStore = create((set, get) => ({
 
       return data[0];
     } catch (error) {
-      console.log("Error removing note from favorites:", error);
+      console.error("Error removing note from favorites:", error);
       set({
         likeLoading: false,
         error: error.message || "Failed to remove from favorites",
@@ -711,7 +658,7 @@ export const useAuthStore = create((set, get) => ({
       return data;
     } catch (error) {
       set({ likedListLoading: false, error: error.message });
-      console.log(error.message);
+      console.error(error.message);
     }
   },
 

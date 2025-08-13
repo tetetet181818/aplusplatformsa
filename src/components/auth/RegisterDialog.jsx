@@ -67,8 +67,6 @@ const RegisterDialog = ({ isOpen, onClose, onSwitchToLogin }) => {
     },
   });
 
-  
-
   useEffect(() => {
     if (error) {
       toast({
@@ -84,8 +82,6 @@ const RegisterDialog = ({ isOpen, onClose, onSwitchToLogin }) => {
       return () => clearTimeout(timer);
     }
   }, [error, clearError]);
-
-
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -110,6 +106,7 @@ const RegisterDialog = ({ isOpen, onClose, onSwitchToLogin }) => {
                 value={formik.values.full_name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
+                placeholder="اكتب اسمك هنا"
               />
             </div>
             {formik.touched.full_name && formik.errors.full_name && (
@@ -132,6 +129,7 @@ const RegisterDialog = ({ isOpen, onClose, onSwitchToLogin }) => {
                 value={formik.values.email}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
+                placeholder={"اكتب بريدك الإلكتروني هنا"}
               />
             </div>
             {formik.touched.email && formik.errors.email && (
@@ -154,10 +152,14 @@ const RegisterDialog = ({ isOpen, onClose, onSwitchToLogin }) => {
                   !open && formik.setFieldTouched("university", true)
                 }
               >
-                <SelectTrigger id="university" className="pr-10">
+                <SelectTrigger
+                  dir={"rtl"}
+                  id="university"
+                  className="pr-10 w-full"
+                >
                   <SelectValue placeholder="اختر الجامعة" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent dir={"rtl"}>
                   {universities?.map((uni) => (
                     <SelectItem key={uni} value={uni}>
                       {uni}

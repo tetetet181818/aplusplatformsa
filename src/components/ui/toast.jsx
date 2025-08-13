@@ -25,8 +25,7 @@ const toastVariants = cva(
     variants: {
       variant: {
         default: "bg-background border",
-        destructive:
-          "bg-destructive text-destructive-foreground border-destructive",
+        destructive: "bg-destructive text-white border-destructive",
         success:
           "bg-green-50 text-green-900 border-green-200 dark:bg-green-900 dark:text-green-50 dark:border-green-800",
       },
@@ -52,7 +51,7 @@ const Toast = React.forwardRef(
           "data-[state=closed]:slide-out-to-right-full",
           className
         )}
-        {...props} 
+        {...props}
       />
     );
   }

@@ -1,4 +1,6 @@
 "use client";
+import { Ring } from "ldrs/react";
+import "ldrs/react/Ring.css";
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import { useRouter } from "next/navigation";
@@ -111,14 +113,13 @@ const AddNoteForm = ({ universities, userNotesCount, edit }) => {
           toast({
             title: "تم التحديث بنجاح",
             description: "تم تحديث الملخص بنجاح.",
-            variant: "default",
+            variant: "success",
           });
-          router.push("/dashboard/notes");
+          router.push(`/notes/${edit}`);
         } else {
           await createNote(formData);
           toast({
             title: "تم إنشاء الملخص بنجاح",
-            description: "سيتم مراجعة الملخص من قبل الإدارة قبل نشره.",
             variant: "success",
           });
           formik.resetForm();
@@ -266,7 +267,7 @@ const AddNoteForm = ({ universities, userNotesCount, edit }) => {
                     }
                     disabled={!isEditMode && !canAddMoreNotes}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className={"w-full"}>
                       <SelectValue placeholder="اختر الجامعة" />
                     </SelectTrigger>
                     <SelectContent>
@@ -297,7 +298,7 @@ const AddNoteForm = ({ universities, userNotesCount, edit }) => {
                       (!isEditMode && !canAddMoreNotes)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className={"w-full"}>
                       <SelectValue placeholder="اختر الكلية" />
                     </SelectTrigger>
                     <SelectContent>
@@ -548,6 +549,13 @@ const AddNoteForm = ({ universities, userNotesCount, edit }) => {
           </form>
         </CardContent>
       </Card>
+      {loading && (
+        <>
+          <div className="fixed top-0 left-0 bg-black/50 z-50 w-screen h-screen">
+            <Ring size={50} speed={1.5} bgOpacity={0.25} />
+          </div>
+        </>
+      )}
     </motion.div>
   );
 };

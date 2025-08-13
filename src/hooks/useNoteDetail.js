@@ -28,13 +28,6 @@ const useNoteDetail = () => {
     downloadLoading,
   } = useFileStore();
 
-  console.log("getSingleNote:", getSingleNote);
-  console.log("getUserById:", getUserById);
-  console.log("deleteNote:", deleteNote);
-  console.log("downloadNote:", downloadNote);
-
-
-
   const [isPurchaseConfirmOpen, setIsPurchaseConfirmOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
@@ -59,7 +52,7 @@ const useNoteDetail = () => {
   useEffect(() => {
     const fetchOwner = async () => {
       if (note?.owner_id) {
-        const ownerData = await getUserById(note.owner_id);
+        const ownerData = await getUserById({ id: note.owner_id });
         setOwner(ownerData);
       }
     };
@@ -90,7 +83,7 @@ const useNoteDetail = () => {
 
   const confirmDelete = useCallback(async () => {
     try {
-      await deleteNote(note?.id);
+      await deleteNote({ id: note?.id });
       toast({
         title: "تم الحذف بنجاح",
         description: `تم حذف ملخص "${note?.title}" بنجاح`,

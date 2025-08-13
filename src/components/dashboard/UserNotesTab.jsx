@@ -100,7 +100,7 @@ const UserNotesTab = ({
                     variant="ghost"
                     size="sm"
                     className="text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900"
-                    onClick={() => onNavigate(`/add-note?edit=${note.id}`)}
+                    onClick={() => onNavigate(`/add-note/${note.id}`)}
                   >
                     <Edit className="h-4 w-4 ml-1" />
                     تعديل

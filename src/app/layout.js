@@ -56,7 +56,6 @@ export default function RootLayout({ children }) {
         style={{
           fontFamily: "Tajawal, sans-serif",
         }}
-        // className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <LayoutClient>{children}</LayoutClient>
       </body>

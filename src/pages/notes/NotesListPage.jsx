@@ -10,7 +10,11 @@ import NotesFilterSection from "./NotesFilterSection";
 import NotesResultsSection from "./NotesResultsSection";
 import Pagination from "@/components/ui/Pagination";
 import Head from "next/head";
-
+export const metaData = {
+  title: "تصفح وابحث عن الملخصات",
+  description: "تصفح وابحث عن أفضل الملخصات الدراسية الجامعية",
+  keywords: ["ملخصات دراسية", "جامعة", "ملخصات جامعية", "دروس", "محاضرات"],
+};
 const NotesListPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -178,18 +182,6 @@ const NotesListPage = () => {
 
   return (
     <>
-      <Head>
-        <title>تصفح الملخصات | منصة أ+</title>
-        <meta
-          name="description"
-          content="تصفح وابحث عن أفضل الملخصات الدراسية الجامعية"
-        />
-        <meta
-          name="keywords"
-          content="ملخصات دراسية, جامعة, ملخصات جامعية, دروس, محاضرات"
-        />
-      </Head>
-
       <div className="container py-12 px-4 md:px-6">
         <NotesListHeader
           onToggleFilters={toggleFilters}
@@ -224,7 +216,7 @@ const NotesListPage = () => {
           </div>
         )}
 
-        {isTyping || isLoadingNotes ? (
+        {isLoadingNotes ? (
           <LoadingSpinner message="جاري البحث..." />
         ) : (
           <>

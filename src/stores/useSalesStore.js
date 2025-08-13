@@ -13,7 +13,7 @@ export const useSalesStore = create((set, get) => ({
   platformProfit: 0,
   growthRate: 0,
   monthlySales: [],
-
+  selectSalesDetails: null,
   setLoading: (loading) => set(() => ({ loading })),
 
   setCurrentPage: (page) => set(() => ({ currentPage: page })),
@@ -50,10 +50,6 @@ export const useSalesStore = create((set, get) => ({
         query = query.or(`full_name.ilike.%${filters.search}%`, {
           foreignTable: "users",
         });
-
-
-
-
       }
 
       if (filters.dateFrom && filters.dateTo) {
@@ -71,7 +67,6 @@ export const useSalesStore = create((set, get) => ({
         set({ loading: false, error: error.message || "خطأ غير معروف" });
         throw new Error(error.message || "خطأ غير معروف");
       }
-
 
       set({
         sales: data || [],
@@ -143,32 +138,28 @@ export const useSalesStore = create((set, get) => ({
   },
 
   getSalesStatistics: async () => {
-  try {
-    set({ loading: true, error: null });
+    try {
+      set({ loading: true, error: null });
 
-    const [
-      totalAmountResult,
-      growthRateResult,
-      monthlySalesResult
-    ] = await Promise.all([
-      get().getTotalSalesAmount(),
-      get().getMonthlyGrowthRate(),
-      get().getMonthlySales(),
-    ]);
+      const [totalAmountResult, growthRateResult, monthlySalesResult] =
+        await Promise.all([
+          get().getTotalSalesAmount(),
+          get().getMonthlyGrowthRate(),
+          get().getMonthlySales(),
+        ]);
 
-    set({ loading: false });
+      set({ loading: false });
 
-    return {
-      totalAmount: totalAmountResult?.totalAmount || 0,
-      platformProfit: totalAmountResult?.platformProfit || 0,
-      growthRate: growthRateResult || 0,
-      monthlySales: monthlySalesResult || [],
-    };
-  } catch (error) {
-    return get().handleError(error, "فشل في جلب إحصائيات المبيعات");
-  }
-},
-
+      return {
+        totalAmount: totalAmountResult?.totalAmount || 0,
+        platformProfit: totalAmountResult?.platformProfit || 0,
+        growthRate: growthRateResult || 0,
+        monthlySales: monthlySalesResult || [],
+      };
+    } catch (error) {
+      return get().handleError(error, "فشل في جلب إحصائيات المبيعات");
+    }
+  },
 
   getUserSales: async (userId) => {
     try {
@@ -230,7 +221,7 @@ export const useSalesStore = create((set, get) => ({
 
       toast({
         title: "تم تسجيل البيع بنجاح",
-        variant: "default",
+        variant: "success",
       });
 
       set({ loading: false });
@@ -272,6 +263,20 @@ export const useSalesStore = create((set, get) => ({
       return get().handleError(error, "فشل في تحديث حالة البيع");
     }
   },
-
+  getDetailsOfSales: async ({ salesId }) => {
+    try {
+      const { data, error } = await supabase
+        .from("sales")
+        .select("*")
+        .eq("id", salesId)
+        .single();
+      if (error) throw new Error(error.message);
+      console.log(data);
+      set({ selectSalesDetails: data });
+      return data;
+    } catch (err) {
+      throw new Error(err.message);
+    }
+  },
   clearError: () => set({ error: null }),
 }));

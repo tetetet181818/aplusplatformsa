@@ -114,7 +114,7 @@ const EarningsTab = ({ currentUser, getSellerNotes }) => {
     const fetchSellerStats = async () => {
       if (currentUser?.id) {
         try {
-          const userNotes = await getSellerNotes({ sellerId: currentUser.id });
+          const userNotes = await getSellerNotes({ sellerId: currentUser?.id });
           setSellerStats(userNotes || []);
         } catch (error) {
           toast({

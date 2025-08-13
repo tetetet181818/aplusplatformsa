@@ -8,10 +8,13 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 export default function LayoutClient({ children }) {
-  const getUser = useAuthStore((state) => state.getUser);
+  const { getUser, fetchNotifications, fetchTheNumberOfUnreadNotifications } =
+    useAuthStore((state) => state);
 
   useEffect(() => {
     getUser();
+    fetchNotifications();
+    fetchTheNumberOfUnreadNotifications();
   }, []);
 
   return (

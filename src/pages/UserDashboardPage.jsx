@@ -230,19 +230,7 @@ const UserDashboardPage = () => {
 
   return (
     <>
-      <Head>
-        <title>{metadata.title}</title>
-        <meta name="description" content={metadata.description} />
-        <meta name="keywords" content={metadata.keywords.join(",")} />
-        <meta property="og:title" content={metadata.openGraph.title} />
-        <meta
-          property="og:description"
-          content={metadata.openGraph.description}
-        />
-        <meta property="og:url" content={metadata.openGraph.url} />
-        <meta property="og:type" content={metadata.openGraph.type} />
-      </Head>
-
+  
       <motion.div
         className="container py-8 px-4 md:px-6"
         initial={{ opacity: 0 }}

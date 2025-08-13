@@ -340,4 +340,14 @@ export const useWithdrawalsStore = create((set, get) => ({
     if (error) throw error;
     console.log(data);
   },
+  addRoutingDetails: async ({ withdrawalId, routing_number, routing_date }) => {
+    const { data, error } = await supabase
+      .from("withdrawals")
+      .update({ routing_number, routing_date })
+      .eq("id", withdrawalId);
+    if (error) throw error;
+    console.log(data);
+    await get().getWithdrawals();
+    return data;
+  },
 }));

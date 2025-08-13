@@ -87,7 +87,7 @@ const EditNoteForm = ({ universities, note }) => {
         toast({
           title: "تم التحديث بنجاح",
           description: "تم تحديث الملخص بنجاح.",
-          variant: "default",
+          variant: "success",
         });
       } catch (err) {
         toast({

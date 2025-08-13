@@ -123,17 +123,23 @@ const ProfileInfoTab = ({
               className="pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-col justify-center sm:flex-row gap-3"
             >
               <Button className=" space-y-2">
-                <Link href={"/reset-password"}>
-                  <Edit3 className="h-4 w-4" />
+                <Link
+                  href={"/reset-password"}
+                  className="flex items-center gap-1"
+                >
+                  <Edit3 className="size-4" />
                   <span> تعديل كلمه المرور</span>
                 </Link>
               </Button>
-              <Button onClick={() => setOpenDialogUpdate(true)}>
-                <Edit3 className="h-4 w-4" />
+              <Button
+                onClick={() => setOpenDialogUpdate(true)}
+                className={"flex gap-1"}
+              >
+                <Edit3 className="size-4" />
                 <span>تعديل الملف الشخصي</span>
               </Button>
               <Button variant="destructive" onClick={() => deleteAccount()}>
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="size-4" />
                 <span>حذف الحساب</span>
               </Button>
             </motion.div>
