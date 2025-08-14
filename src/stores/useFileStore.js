@@ -10,8 +10,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY;
 const BUCKET_NAME = "notes";
 const moyasar_key = process.env.MOYASAR_SECRET_KEY;
-// const domain = "https://aplusplatformsa.com";
-const domain = "http://localhost:3000";
+const domain = "https://aplusplatformsa.com";
 export const useFileStore = create((set, get) => ({
   loading: false,
   error: null,
