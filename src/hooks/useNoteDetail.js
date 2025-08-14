@@ -72,14 +72,16 @@ const useNoteDetail = () => {
         description: "يرجى تسجيل الدخول أولاً لإتمام عملية الشراء",
         variant: "destructive",
       });
-      return router.push(`/login?redirect=/notes/${id}`);
+      return router.push(`/notes/${id}`);
     }
     setIsPurchaseConfirmOpen(true);
   }, [isAuthenticated, id, router, toast]);
-
-  const confirmPurchase = useCallback(() => {
-    router.push(`/checkout?noteId=${note?.id}&amount=${note?.price}`);
-  }, [note, router]);
+  console.log(currentUser?.id);
+  const confirmPurchase = () => {
+    router.push(
+      `/checkout?userId=${currentUser?.id}&noteId=${note?.id}&amount=${note?.price}`
+    );
+  };
 
   const confirmDelete = useCallback(async () => {
     try {
@@ -107,7 +109,7 @@ const useNoteDetail = () => {
         description: "يرجى تسجيل الدخول لتقييم الملخص",
         variant: "destructive",
       });
-      return router.push(`/login?redirect=/notes/${id}`);
+      return router.push(`/notes/${id}`);
     }
     if (!hasPurchased) {
       toast({
