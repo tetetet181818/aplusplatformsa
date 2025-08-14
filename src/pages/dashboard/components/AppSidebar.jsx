@@ -38,7 +38,7 @@ export default function AppSidebar({
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1 px-2">
-              {navigationItems.map((item) => (
+              {navigationItems?.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
                     onClick={() => setActiveSection(item.id)}

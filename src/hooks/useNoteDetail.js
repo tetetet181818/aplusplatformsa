@@ -76,7 +76,6 @@ const useNoteDetail = () => {
     }
     setIsPurchaseConfirmOpen(true);
   }, [isAuthenticated, id, router, toast]);
-  console.log(currentUser?.id);
   const confirmPurchase = () => {
     router.push(
       `/checkout?userId=${currentUser?.id}&noteId=${note?.id}&amount=${note?.price}`

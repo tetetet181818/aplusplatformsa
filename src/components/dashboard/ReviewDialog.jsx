@@ -39,14 +39,6 @@ const ReviewDialog = ({
     },
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
-      console.log({
-        rating: values.rating,
-        comment: values.comment,
-        userId: currentUser.id,
-        userName: currentUser.full_name,
-        userAvatar: currentUser.avatar,
-        created_at: new Date().toISOString(),
-      });
       const reviewData = {
         rating: values.rating,
         comment: values.comment,

@@ -6,7 +6,6 @@ import { useParams } from "next/navigation";
 export default function Edit() {
   const { edit } = useParams();
   const { isAuthenticated } = useAuthStore((state) => state);
-  console.log(edit);
   return (
     <>
       <AddNotePage isAuthenticated={isAuthenticated} edit={edit} />

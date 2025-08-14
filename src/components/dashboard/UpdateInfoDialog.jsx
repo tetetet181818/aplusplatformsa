@@ -35,7 +35,6 @@ export default function UpdateInfoDialog({
     },
     validationSchema: updateSchema,
     onSubmit: async (values) => {
-      console.log("values", values);
       await updateUserInfo({ id: user?.id, ...values });
     },
   });

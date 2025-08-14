@@ -413,14 +413,6 @@ export const useFileStore = create((set, get) => ({
   },
 
   purchaseNote: async ({ noteId, userId, invoice_id, status, message }) => {
-    console.log(
-      "from file store slice",
-      noteId,
-      userId,
-      invoice_id,
-      status,
-      message
-    );
     set({ loading: true, error: null });
 
     try {

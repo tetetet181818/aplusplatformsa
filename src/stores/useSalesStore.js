@@ -271,7 +271,6 @@ export const useSalesStore = create((set, get) => ({
         .eq("id", salesId)
         .single();
       if (error) throw new Error(error.message);
-      console.log(data);
       set({ selectSalesDetails: data });
       return data;
     } catch (err) {

@@ -15,7 +15,6 @@ const CheckoutPage = () => {
   const noteId = searchParams.get("noteId");
   const userId = searchParams.get("userId");
   const amount = searchParams.get("amount");
-  console.log(noteId, userId, amount);
   const handlePay = async () => {
     if (!noteId || !userId || !amount) {
       toast({

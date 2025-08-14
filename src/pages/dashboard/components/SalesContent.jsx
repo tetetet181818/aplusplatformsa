@@ -260,7 +260,6 @@ export default function SalesContent() {
             size="sm"
             onClick={() => {
               setShowDetailsDialog(true);
-              console.log(sales?.id);
               setSelectedSalesId(sales?.id);
               getDetailsOfSales({ salesId: sales?.id });
             }}

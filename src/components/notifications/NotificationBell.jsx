@@ -107,7 +107,6 @@ export function NotificationPanel() {
   const handleRefresh = async () => {
     try {
       let res = await fetchNotifications();
-      console.log(res);
     } catch (error) {
       console.error("Failed to refresh notifications:", error);
     }

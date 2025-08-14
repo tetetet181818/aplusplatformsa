@@ -48,9 +48,7 @@ export const useWithdrawalsStore = create((set, get) => ({
         .from("users")
         .select("*")
         .eq("id", userData.id);
-      console.log(data);
       const updatedWithdrawalCount = data[0].withdrawal_times - 1;
-      console.log(updatedWithdrawalCount);
       const { error: updateUserError } = await supabase
         .from("users")
         .update({ withdrawal_times: updatedWithdrawalCount })
@@ -332,13 +330,11 @@ export const useWithdrawalsStore = create((set, get) => ({
     }
   },
   resetWithdrawalTimes: async ({ userId }) => {
-    console.log(userId);
     const { data, error } = await supabase
       .from("users")
       .update({ withdrawal_times: 2 })
       .eq("id", userId);
     if (error) throw error;
-    console.log(data);
   },
   addRoutingDetails: async ({ withdrawalId, routing_number, routing_date }) => {
     const { data, error } = await supabase
@@ -346,7 +342,6 @@ export const useWithdrawalsStore = create((set, get) => ({
       .update({ routing_number, routing_date })
       .eq("id", withdrawalId);
     if (error) throw error;
-    console.log(data);
     await get().getWithdrawals();
     return data;
   },

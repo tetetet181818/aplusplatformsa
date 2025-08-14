@@ -40,9 +40,6 @@ const ProfileInfoTab = ({
 
   const handleDeleteAccount = async () => {
     let res = await deleteAccount();
-    if (res) {
-      console.log(res);
-    }
   };
   return (
     <>

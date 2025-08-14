@@ -8,11 +8,11 @@ export default function NotesResultsSection({
   hasActiveFilters,
   onClearFilters,
 }) {
-  if (filteredNotes.length > 0) {
+  if (filteredNotes?.length > 0) {
     return <NotesGrid notes={filteredNotes} />;
   }
 
-  if (filteredNotes.length === 0) {
+  if (filteredNotes?.length === 0) {
     return (
       <NoResults
         icon={<BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />}
